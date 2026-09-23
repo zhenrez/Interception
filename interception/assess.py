@@ -115,9 +115,7 @@ def assess(project):
     total = 0
     truncated = False
     host_runtimes = sorted(
-        runtime
-        for marker, runtime in HOST_RUNTIME_MARKERS.items()
-        if (root / marker).exists()
+        runtime for marker, runtime in HOST_RUNTIME_MARKERS.items() if (root / marker).exists()
     )
     for directory, dirs, names in os.walk(root, followlinks=False):
         dirs[:] = sorted(
