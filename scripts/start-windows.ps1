@@ -269,33 +269,6 @@ Nothing outside this repository was changed.
     }
 }
 
-function Test-RelayPrerequisites {
-    $Gh = Get-Command gh.exe -ErrorAction SilentlyContinue
-    if (-not $Gh) {
-        Write-Host "GitHub relay note: gh.exe is not installed. Core Interception still works." -ForegroundColor DarkYellow
-        Write-Host "Install GitHub CLI before using relay-configure / relay-watch." -ForegroundColor DarkYellow
-        return 'missing'
-    }
-
-    $PreviousErrorAction = $ErrorActionPreference
-    try {
-        $ErrorActionPreference = 'Continue'
-        & $Gh.Source auth status --hostname github.com *> $null
-        $AuthExit = $LASTEXITCODE
-    }
-    finally {
-        $ErrorActionPreference = $PreviousErrorAction
-    }
-    if ($AuthExit -ne 0) {
-        Write-Host "GitHub relay note: gh.exe is installed but not authenticated." -ForegroundColor DarkYellow
-        Write-Host "Run: gh auth login" -ForegroundColor DarkYellow
-        return 'unauthenticated'
-    }
-
-    Write-Host "GitHub CLI is installed and authenticated for relay use." -ForegroundColor DarkGreen
-    return 'ready'
-}
-
 function Write-Failure($Failure) {
     $Lines = @(
         "Interception Windows launcher failure",
@@ -379,15 +352,12 @@ Tcl/Tk enabled, then run Start-Interception.cmd again.
         throw 'Interception mailbox smoke test failed.'
     }
 
-    $RelayStatus = Test-RelayPrerequisites
-
     $Success = @{
         service = 'Interception'
         verified_utc = [DateTime]::UtcNow.ToString('o')
         python = $Base.Version
         python_executable = $Base.Executable
         venv = $Venv
-        relay_prerequisites = $RelayStatus
     } | ConvertTo-Json
     Set-Content -LiteralPath $SuccessLog -Value $Success -Encoding UTF8
 
