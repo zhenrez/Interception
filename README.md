@@ -27,8 +27,7 @@ The desktop launcher requires official 64-bit CPython 3.13 or 3.11 with Tcl/Tk. 
 without a GUI. The launcher will replace only this repository's incompatible `.venv`; it never
 changes global Python, Conda, CUDA or NVIDIA installations. Failures are written to
 `artifacts/launcher-failure.txt`. For a setup-only check, run
-`Start-Interception.cmd -VerifyOnly`. GitHub CLI authentication is checked for relay readiness
-but is not required for core/local operation.
+`Start-Interception.cmd -VerifyOnly`. GitHub relay authentication remains a separate explicit setup step; the launcher does not make it a prerequisite for core/local operation.
 
 ## What works
 
