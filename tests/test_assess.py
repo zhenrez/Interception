@@ -93,3 +93,60 @@ def test_mcp_tool_server_marks_external_client_boundary(tmp_path):
     assert result["protocol_surfaces"] == ["MCP_SERVER"]
     assert result["recommended_interception"] == "mcp_host_adapter_candidate"
     assert result["continuation_strategy"] == "UNVERIFIED"
+
+
+def test_langchain_model_invocation_marks_framework_boundary(tmp_path):
+    (tmp_path / "llm_service.py").write_text(
+        "from langchain_groq import ChatGroq\n"
+        'llm = ChatGroq(model="llama", temperature=0)\n'
+        "result = llm.invoke(prompt)\n",
+        encoding="utf-8",
+    )
+    result = assess(tmp_path)
+    assert result["inference_boundary_owner"] == "FRAMEWORK_CANDIDATE"
+    assert result["protocol_surfaces"] == ["LANGCHAIN_MODEL"]
+    assert result["recommended_interception"] == "framework_adapter_candidate"
+    assert result["continuation_strategy"] == "UNVERIFIED"
+
+
+def test_ollama_native_http_marks_project_owned_inference(tmp_path):
+    (tmp_path / "local_llm.py").write_text(
+        "import httpx\n"
+        'response = httpx.post("http://localhost:11434/api/generate", json={"prompt": "hi"})\n',
+        encoding="utf-8",
+    )
+    result = assess(tmp_path)
+    assert result["inference_boundary_owner"] == "PROJECT"
+    assert result["direct_inference_protocol"] == "OLLAMA_NATIVE"
+    assert result["recommended_interception"] == "ollama_native_adapter_candidate"
+    assert "SYNCHRONOUS_HOLD" in result["continuation_candidates"]
+
+
+def test_host_cli_subprocess_marks_host_runtime_boundary(tmp_path):
+    (tmp_path / "orchestrator.py").write_text(
+        "import subprocess\n"
+        'subprocess.run(["claude", "-p", prompt], check=True)\n',
+        encoding="utf-8",
+    )
+    result = assess(tmp_path)
+    assert result["inference_boundary_owner"] == "HOST_RUNTIME_CANDIDATE"
+    assert result["host_runtime_candidates"] == ["claude_code"]
+    assert result["protocol_surfaces"] == ["HOST_CLI_SUBPROCESS"]
+    assert result["recommended_interception"] == "host_runtime_adapter_candidate"
+    assert "HOST_RUNTIME_RESUME" in result["continuation_candidates"]
+
+
+def test_test_fixture_inference_call_is_not_runtime_evidence(tmp_path):
+    tests = tmp_path / "tests"
+    tests.mkdir()
+    (tests / "test_provider.py").write_text(
+        "from openai import OpenAI\n"
+        "client = OpenAI()\n"
+        'client.chat.completions.create(model="fake", messages=[])\n',
+        encoding="utf-8",
+    )
+    result = assess(tmp_path)
+    assert result["providers"] == []
+    assert result["direct_inference_protocol"] == "NOT_DETECTED"
+    assert result["inference_boundary_owner"] == "UNKNOWN"
+    assert result["recommended_interception"] == "explicit_sdk_adapter"
