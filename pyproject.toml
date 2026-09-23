@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "interception-bridge"
+version = "0.1.0"
+description = "Durable human-in-the-loop inference mailbox for existing agent projects"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["jsonschema>=4.23,<5"]
+license = "Apache-2.0"
+
+[project.optional-dependencies]
+openai = ["openai>=1.60,<3"]
+dev = ["pytest>=8,<10", "ruff>=0.11,<1", "openai>=1.60,<3"]
+
+[project.scripts]
+interception = "interception.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["interception*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
