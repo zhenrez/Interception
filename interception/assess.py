@@ -47,6 +47,40 @@ HOST_RUNTIME_MARKERS = {
     ".gemini": "gemini_cli",
     ".kiro": "kiro",
 }
+HOST_CLI_NAMES = {
+    "claude": "claude_code",
+    "codex": "codex",
+    "gemini": "gemini_cli",
+}
+NON_RUNTIME_PARTS = {"test", "tests", "fixture", "fixtures"}
+
+
+def _is_runtime_path(relative):
+    path = Path(relative)
+    parts = {part.lower() for part in path.parts[:-1]}
+    name = path.name.lower()
+    return not (parts & NON_RUNTIME_PARTS or name.startswith("test_") or name.endswith("_test.py"))
+
+
+def _host_cli_candidates(text):
+    if not re.search(r"\\b(?:subprocess\\.(?:run|Popen)|spawn|execFile|exec)\\s*\\(", text):
+        return set()
+    found = set()
+    for executable, runtime in HOST_CLI_NAMES.items():
+        if re.search(rf"[\"\']{re.escape(executable)}[\"\']", text):
+            found.add(runtime)
+    return found
+
+
+def _runtime_protocol_surfaces(text, runtime_signals):
+    surfaces = set()
+    if "langchain" in runtime_signals and re.search(r"\\.a?invoke\\s*\\(", text):
+        surfaces.add("LANGCHAIN_MODEL")
+    if re.search(r"/api/(?:generate|chat)\\b", text) and re.search(
+        r"\\b(?:httpx|requests|aiohttp|fetch)\\b", text
+    ):
+        surfaces.add("OLLAMA_NATIVE")
+    return surfaces
 
 
 def _python_runtime_signals(tree):
@@ -93,8 +127,10 @@ def _source_runtime_signals(path, text):
     return signals
 
 
-def _direct_protocol(calls):
+def _direct_protocol(calls, protocol_surfaces):
     mechanisms = [item["mechanism"] for item in calls]
+    if "OLLAMA_NATIVE" in protocol_surfaces:
+        return "OLLAMA_NATIVE"
     if any("chat.completions.create" in item for item in mechanisms):
         return "OPENAI_CHAT_COMPLETIONS"
     if any("responses.create" in item for item in mechanisms):
@@ -112,12 +148,13 @@ def assess(project):
         raise ValueError("Project must be an existing directory")
     evidence, calls, skipped = [], [], []
     runtime_signals = set()
+    runtime_detected = set()
     files = 0
     total = 0
     truncated = False
-    host_runtimes = sorted(
+    host_runtimes = {
         runtime for marker, runtime in HOST_RUNTIME_MARKERS.items() if (root / marker).exists()
-    )
+    }
     protocol_surfaces = set()
     for directory, dirs, names in os.walk(root, followlinks=False):
         dirs[:] = sorted(
@@ -146,6 +183,7 @@ def assess(project):
                 skipped.append({"file": relative, "reason": "unreadable or non-UTF-8"})
                 continue
             files += 1
+            runtime_path = _is_runtime_path(relative)
             for line_no, line in enumerate(text.splitlines(), 1):
                 for signal, pattern in SIGNALS.items():
                     if re.search(pattern, line):
@@ -155,11 +193,20 @@ def assess(project):
                                 "file": relative,
                                 "line": line_no,
                                 "status": "STATIC_CANDIDATE",
-                                "provenance": "TEXTUAL_REFERENCE",
+                                "provenance": "TEXTUAL_REFERENCE" if runtime_path else "NON_RUNTIME_REFERENCE",
                             }
                         )
-            runtime_signals.update(_source_runtime_signals(path, text))
-            if MCP_SERVER_PATTERN.search(text):
+                        if runtime_path:
+                            runtime_detected.add(signal)
+            file_runtime_signals = _source_runtime_signals(path, text) if runtime_path else set()
+            runtime_signals.update(file_runtime_signals)
+            if runtime_path:
+                host_hits = _host_cli_candidates(text)
+                if host_hits:
+                    host_runtimes.update(host_hits)
+                    protocol_surfaces.add("HOST_CLI_SUBPROCESS")
+                protocol_surfaces.update(_runtime_protocol_surfaces(text, file_runtime_signals))
+            if runtime_path and MCP_SERVER_PATTERN.search(text):
                 protocol_surfaces.add("MCP_SERVER")
             if path.suffix == ".py":
                 try:
@@ -167,12 +214,16 @@ def assess(project):
                 except SyntaxError:
                     skipped.append({"file": relative, "reason": "Python parse failed"})
                     continue
-                runtime_signals.update(_python_runtime_signals(tree))
+                python_signals = _python_runtime_signals(tree) if runtime_path else set()
+                runtime_signals.update(python_signals)
+                if runtime_path:
+                    protocol_surfaces.update(_runtime_protocol_surfaces(text, python_signals))
                 for node in ast.walk(tree):
                     if isinstance(node, ast.Call):
                         function = ast.unparse(node.func)
                         if (
-                            len(function) <= 160
+                            runtime_path
+                            and len(function) <= 160
                             and re.fullmatch(r"[A-Za-z_][\w.]*", function)
                             and any(
                                 token in function
@@ -191,11 +242,13 @@ def assess(project):
         if truncated:
             break
     detected = {item["signal"] for item in evidence}
-    protocol = _direct_protocol(calls)
+    protocol = _direct_protocol(calls, protocol_surfaces)
     if protocol != "NOT_DETECTED":
         boundary_owner = "PROJECT"
     elif "MCP_SERVER" in protocol_surfaces:
         boundary_owner = "EXTERNAL_CLIENT_CANDIDATE"
+    elif "LANGCHAIN_MODEL" in protocol_surfaces:
+        boundary_owner = "FRAMEWORK_CANDIDATE"
     elif host_runtimes:
         boundary_owner = "HOST_RUNTIME_CANDIDATE"
     else:
@@ -203,8 +256,12 @@ def assess(project):
 
     if protocol == "OPENAI_CHAT_COMPLETIONS":
         recommended = "openai_compatible_proxy_candidate"
+    elif protocol == "OLLAMA_NATIVE":
+        recommended = "ollama_native_adapter_candidate"
     elif "MCP_SERVER" in protocol_surfaces:
         recommended = "mcp_host_adapter_candidate"
+    elif boundary_owner == "FRAMEWORK_CANDIDATE":
+        recommended = "framework_adapter_candidate"
     elif boundary_owner == "HOST_RUNTIME_CANDIDATE":
         recommended = "host_runtime_adapter_candidate"
     else:
@@ -213,7 +270,7 @@ def assess(project):
     continuation_candidates = []
     if protocol != "NOT_DETECTED":
         continuation_candidates.append("SYNCHRONOUS_HOLD")
-    if "checkpoint_candidate" in detected:
+    if "checkpoint_candidate" in runtime_detected:
         continuation_candidates.extend(["COOPERATIVE_REENTRY", "WORKFLOW_REENTRY"])
     if host_runtimes:
         continuation_candidates.append("HOST_RUNTIME_RESUME")
@@ -228,7 +285,7 @@ def assess(project):
         blockers.append(
             "The detected native inference protocol needs a protocol adapter; V1 rejects it."
         )
-    elif "anthropic" in runtime_signals or "unsupported_protocol" in detected:
+    elif "anthropic" in runtime_signals or "unsupported_protocol" in runtime_detected:
         blockers.append(
             "Native Anthropic, Responses, embeddings and multimodal calls need protocol adapters; V1 rejects them."
         )
@@ -243,7 +300,7 @@ def assess(project):
         "frameworks": sorted(runtime_signals & FRAMEWORK_SIGNALS),
         "providers": sorted(runtime_signals & PROVIDER_SIGNALS),
         "textual_references": sorted(detected & (PROVIDER_SIGNALS | FRAMEWORK_SIGNALS)),
-        "host_runtime_candidates": host_runtimes,
+        "host_runtime_candidates": sorted(host_runtimes),
         "protocol_surfaces": sorted(protocol_surfaces),
         "inference_boundary_owner": boundary_owner,
         "direct_inference_protocol": protocol,
@@ -252,10 +309,10 @@ def assess(project):
         "skipped": skipped,
         "recommended_interception": recommended,
         "checkpoint_support": "UNVERIFIED"
-        if "checkpoint_candidate" in detected
+        if "checkpoint_candidate" in runtime_detected
         else "NOT_DETECTED",
         "streaming_detected": "STATIC_CANDIDATE"
-        if "streaming_candidate" in detected
+        if "streaming_candidate" in runtime_detected
         else "NOT_DETECTED",
         "automatic_installation": "CONFIGURATION_ONLY; source code not modified",
         "continuation_strategy": "UNVERIFIED",
