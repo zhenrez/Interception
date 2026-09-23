@@ -210,3 +210,10 @@ process death/re-entry, malformed returns, contract enforcement, concurrency, co
 assessment boundaries and node supervision. See [architecture](docs/architecture.md).
 
 Apache-2.0 licensed.
+
+## GitHub / ChatGPT notification extension
+
+This branch adds an optional event-triggered relay through the existing GitHub plugin.
+A private mailbox PR update can wake a Work task; its returned JSON resumes the local caller.
+See [plugin setup and verified boundaries](plugin/README.md). The implementation is prepared,
+but a live private mailbox and Work automation have not been activated.
