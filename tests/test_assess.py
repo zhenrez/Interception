@@ -159,9 +159,7 @@ def test_multiple_inference_surfaces_are_reported_without_collapsing_ownership(t
         encoding="utf-8",
     )
     (tmp_path / "framework.py").write_text(
-        "from langchain_groq import ChatGroq\n"
-        'llm = ChatGroq(model="llama")\n'
-        "llm.invoke(prompt)\n",
+        'from langchain_groq import ChatGroq\nllm = ChatGroq(model="llama")\nllm.invoke(prompt)\n',
         encoding="utf-8",
     )
     (tmp_path / "server.ts").write_text(
@@ -217,7 +215,7 @@ def test_notebook_and_additional_source_languages_are_discovered(tmp_path):
         encoding="utf-8",
     )
     (tmp_path / "run.sh").write_text('claude -p "$PROMPT"\n', encoding="utf-8")
-    (tmp_path / "run.ps1").write_text('codex exec $Prompt\n', encoding="utf-8")
+    (tmp_path / "run.ps1").write_text("codex exec $Prompt\n", encoding="utf-8")
 
     result = assess(tmp_path)
 
