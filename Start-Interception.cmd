@@ -1,37 +1,36 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-if exist ".venv\Scripts\python.exe" goto ready
-py -3.13 -c "import sys" >nul 2>&1
-if not errorlevel 1 (
-  py -3.13 -m venv .venv
-  goto checkvenv
+title Interception One-Click Launcher
+
+rem Prefer Windows' own PowerShell by absolute path so unrelated PATH entries
+rem cannot redirect the launcher into Conda/NVIDIA/other toolchains.
+set "INTERCEPTION_PS="
+if exist "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" (
+  set "INTERCEPTION_PS=%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe"
 )
-py -3.11 -c "import sys" >nul 2>&1
-if not errorlevel 1 (
-  py -3.11 -m venv .venv
-  goto checkvenv
+if not defined INTERCEPTION_PS if exist "%ProgramFiles%\PowerShell\7\pwsh.exe" (
+  set "INTERCEPTION_PS=%ProgramFiles%\PowerShell\7\pwsh.exe"
 )
-py -3.12 -c "import sys" >nul 2>&1
-if not errorlevel 1 (
-  py -3.12 -m venv .venv
-  goto checkvenv
+if not defined INTERCEPTION_PS (
+  where powershell.exe >nul 2>nul
+  if not errorlevel 1 set "INTERCEPTION_PS=powershell.exe"
 )
-echo Install CPython 3.13 or 3.11 from python.org with the Python Launcher and Tcl/Tk enabled.
-pause
-exit /b 1
-:checkvenv
-if not exist ".venv\Scripts\python.exe" goto failed
-:ready
-.venv\Scripts\python.exe -c "import interception, jsonschema, tkinter" >nul 2>&1
-if not errorlevel 1 goto launch
-.venv\Scripts\python.exe -m pip --isolated install --index-url https://pypi.org/simple -e .
-if errorlevel 1 goto failed
-:launch
-.venv\Scripts\python.exe -m interception desktop
-if errorlevel 1 goto failed
-exit /b 0
-:failed
-echo Setup or launch failed. The error above explains what needs attention.
-pause
-exit /b 1
+if not defined INTERCEPTION_PS (
+  where pwsh.exe >nul 2>nul
+  if not errorlevel 1 set "INTERCEPTION_PS=pwsh.exe"
+)
+
+if not defined INTERCEPTION_PS (
+  echo.
+  echo Interception could not find PowerShell.
+  echo Windows 11 normally includes Windows PowerShell.
+  echo No system settings were changed.
+  pause
+  exit /b 1
+)
+
+"%INTERCEPTION_PS%" -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\start-windows.ps1" %*
+set "INTERCEPTION_EXIT=%ERRORLEVEL%"
+if not "%INTERCEPTION_EXIT%"=="0" pause
+exit /b %INTERCEPTION_EXIT%
