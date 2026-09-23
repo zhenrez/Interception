@@ -56,7 +56,7 @@ def test_documentation_reference_does_not_imply_proxy_compatibility(tmp_path):
 
 def test_real_chat_completions_call_is_proxy_candidate_but_resume_stays_unverified(tmp_path):
     (tmp_path / "agent.py").write_text(
-        'from openai import OpenAI\n'
+        "from openai import OpenAI\n"
         'client = OpenAI(base_url="http://provider")\n'
         'answer = client.chat.completions.create(model="x", messages=[])\n',
         encoding="utf-8",
