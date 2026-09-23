@@ -1,0 +1,26 @@
+name: Package Interception MVP
+
+on:
+  push:
+    branches:
+      - feat/chatgpt-plugin-mailbox
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage clean package
+        run: |
+          mkdir -p staging/Interception-MVP
+          rsync -a             --exclude='.git'             --exclude='.venv'             --exclude='artifacts/launcher-failure.txt'             --exclude='artifacts/launcher-success.json'             ./ staging/Interception-MVP/
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Interception-MVP
+          path: staging/Interception-MVP
+          if-no-files-found: error
