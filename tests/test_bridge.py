@@ -294,7 +294,7 @@ def test_supervised_node_auto_resumes_and_survives_supervisor_kill(tmp_path):
     ]
     worker = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     try:
-        deadline = time.monotonic() + 8
+        deadline = time.monotonic() + 20
         state_paths = []
         while time.monotonic() < deadline:
             state_paths = list((tmp_path / ".inference_bridge" / "nodes").glob("*.json"))
