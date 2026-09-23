@@ -385,3 +385,29 @@ def test_windows_launcher_uses_hardened_repo_local_bootstrap():
         ".venv",
     ):
         assert required in powershell
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows bootstrap integration")
+def test_windows_bootstrap_verify_only_executes():
+    root = Path(__file__).resolve().parents[1]
+    script = root / "scripts" / "start-windows.ps1"
+    minor = f"{sys.version_info.major}.{sys.version_info.minor}"
+    result = subprocess.run(
+        [
+            "powershell.exe",
+            "-NoLogo",
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            str(script),
+            "-VerifyOnly",
+            "-RequiredPythonMinor",
+            minor,
+        ],
+        cwd=root,
+        capture_output=True,
+        text=True,
+        timeout=240,
+    )
+    assert result.returncode == 0, result.stdout + "\n" + result.stderr
