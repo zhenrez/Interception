@@ -27,14 +27,19 @@ run for verified platforms. Local development was verified on Linux/Python 3.12.
 
 ## What works
 
-- Static project assessment: provider/framework signals, Python call sites, timeout/streaming/
-  checkpoint candidates, with file and line evidence. Findings are candidates, not runtime proofs.
+- Static project assessment v3: explicit `inference_surfaces[]` for multiple simultaneous
+  project/framework/host/external-client boundaries; Python AST evidence, Jupyter code-cell
+  inspection, and bounded Python/JS/TS/Go/C#/shell/PowerShell source discovery. Findings are
+  candidates, not runtime proofs.
 - Local OpenAI **Chat Completions** endpoint; text, JSON answers, JSON Schema, function tool calls,
   synchronous and asynchronous callers, and SSE streaming with waiting heartbeats.
 - Lossless original request plus supplied agent identity, context, task, checkpoint and output contract.
 - SQLite request/checkpoint commits, atomic mailbox files, crash recovery and stable-key deduplication.
 - Invalid, partial, mismatched and conflicting returns cannot release a waiting request.
 - A Python cooperative suspend/resume adapter and an automatic supervisor for **explicitly restart-safe nodes**.
+- Static durable-job detection requires persistent-store + enqueue + claim + complete + fail evidence
+  before `DURABLE_JOB_RESUME` is surfaced; lineage candidates such as run/session/parent/root request,
+  agent, workspace and environment IDs are preserved for target-specific validation.
 - Compact pending manifest and a self-contained batch attachment containing all pending packets.
 - Local desktop control panel and CLI. No accounts, hosted service, or paid inference dependency.
 
