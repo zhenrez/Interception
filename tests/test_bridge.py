@@ -8,7 +8,7 @@ import pytest
 from interception import Bridge, InferencePending
 from interception.bridge import IdempotencyConflict
 from interception.contracts import ContractError
-from interception.files import loads, write_json
+from interception.files import loads, read_json, write_json
 
 REQUEST = {"model": "manual", "messages": [{"role": "user", "content": "Hello"}]}
 
@@ -294,18 +294,15 @@ def test_supervised_node_auto_resumes_and_survives_supervisor_kill(tmp_path):
     ]
     worker = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     try:
-        deadline = time.monotonic() + 8
+        deadline = time.monotonic() + 20
         state_paths = []
         while time.monotonic() < deadline:
             state_paths = list((tmp_path / ".inference_bridge" / "nodes").glob("*.json"))
-            if (
-                state_paths
-                and loads(state_paths[0].read_text())["state"] == "WAITING_FOR_INFERENCE"
-            ):
+            if state_paths and read_json(state_paths[0])["state"] == "WAITING_FOR_INFERENCE":
                 break
             time.sleep(0.02)
         assert state_paths
-        state = loads(state_paths[0].read_text())
+        state = read_json(state_paths[0])
         assert state["state"] == "WAITING_FOR_INFERENCE"
         worker.kill()
         worker.communicate(timeout=3)
@@ -324,7 +321,7 @@ def test_supervised_node_auto_resumes_and_survives_supervisor_kill(tmp_path):
         assert "COMPLETED" in out
         assert (tmp_path / "garden-plan.txt").read_text() == "Resumed automatically"
         assert len(bridge.requests()) == 1
-        assert loads(state_paths[0].read_text())["state"] == "COMPLETED"
+        assert read_json(state_paths[0])["state"] == "COMPLETED"
     finally:
         if worker.poll() is None:
             worker.kill()

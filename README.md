@@ -13,10 +13,17 @@ The core makes no inference API calls.
    64-bit python.org-style CPython 3.13 or 3.11, creates/repairs the repository-local `.venv`,
    strips inherited Conda/NVIDIA/CUDA/Python/pip contamination, forces isolated PyPI dependency
    resolution, verifies Tcl/Tk and the bridge, and then opens the desktop.
-3. Choose your agent project's folder and click **Start bridge**.
-4. For a first mailbox test, click **Create test request → Export batch for ChatGPT**.
-5. Upload that batch to ChatGPT and say **“Fulfill these inference requests.”**
-6. Download its RETURN JSON files and click **Import answers**. Connected waiting callers continue.
+3. Choose your project's folder. In **Goal and procedure**, describe what you want finished,
+   with guidelines and constraints. **Copy goal + working procedure for chat** prepares the handoff.
+4. In **Inference**, click **Run bundled Prompt Evolver test**, then **Copy waiting requests for ChatGPT**.
+5. Paste into ChatGPT and ask it to fulfill the request. Copy its complete RETURN JSON.
+6. Click **Paste RETURN JSON from clipboard**. The same waiting caller resumes and the panel
+   reports **RESUMED**. File export/import is also available.
+
+See [START_HERE.md](START_HERE.md) for the exact procedure and current completion boundary.
+The bundled proof does not require Ollama, LiteLLM, a provider API key, or a separate target download.
+It includes the pinned upstream inference wrapper and its real `judge_score` method, not the full
+evolutionary engine. Keep the window open while the caller waits.
 
 **Connecting a real agent is a separate step:** installation assesses the project and creates
 connection settings at `.inference_bridge/connection.json`. It does not rewrite unfamiliar
@@ -31,14 +38,21 @@ changes global Python, Conda, CUDA or NVIDIA installations. Failures are written
 
 ## What works
 
-- Static project assessment: provider/framework signals, Python call sites, timeout/streaming/
-  checkpoint candidates, with file and line evidence. Findings are candidates, not runtime proofs.
+- Versioned project-local goal/guidelines/constraints brief and a conversational execution handoff.
+- Explicit per-instance Prompt Evolver `LLMClient.complete` adapter and bundled live judging proof.
+- Static project assessment v3: explicit `inference_surfaces[]` for multiple simultaneous
+  project/framework/host/external-client boundaries; Python AST evidence, Jupyter code-cell
+  inspection, and bounded Python/JS/TS/Go/C#/shell/PowerShell source discovery. Findings are
+  candidates, not runtime proofs.
 - Local OpenAI **Chat Completions** endpoint; text, JSON answers, JSON Schema, function tool calls,
   synchronous and asynchronous callers, and SSE streaming with waiting heartbeats.
 - Lossless original request plus supplied agent identity, context, task, checkpoint and output contract.
 - SQLite request/checkpoint commits, atomic mailbox files, crash recovery and stable-key deduplication.
 - Invalid, partial, mismatched and conflicting returns cannot release a waiting request.
 - A Python cooperative suspend/resume adapter and an automatic supervisor for **explicitly restart-safe nodes**.
+- Static durable-job detection requires persistent-store + enqueue + claim + complete + fail evidence
+  before `DURABLE_JOB_RESUME` is surfaced; lineage candidates such as run/session/parent/root request,
+  agent, workspace and environment IDs are preserved for target-specific validation.
 - Compact pending manifest and a self-contained batch attachment containing all pending packets.
 - Local desktop control panel and CLI. No accounts, hosted service, or paid inference dependency.
 
@@ -187,7 +201,8 @@ with unique IDs and JSON-encoded arguments. The original agent executes those to
 | JSON Schema | Draft 2020-12, local references; remote schema fetches prohibited |
 | Streaming | Wait heartbeats, then validated answer chunks; no fabricated intermediate tokens |
 | Model identity/sampling/token usage | Original parameters preserved; manual ChatGPT is not the requested model; no invented usage |
-| LangChain/CrewAI/LiteLLM/etc. | Static detection and configurable OpenAI path candidates; framework integration not proven |
+| Prompt Evolver | Explicit instance adapter; bundled judging hold/return proof; full evolutionary run not yet proven |
+| LangChain/CrewAI/LiteLLM/etc. | Static detection and configurable OpenAI path candidates; general framework integration not proven |
 | Anthropic native/Responses/embeddings/audio/images | Unsupported; rejected, requires protocol adapters |
 | HTTP connection across reboot | Cannot survive; request and response persist; reattach using stable keys or status API |
 | Full context/caller identity | Captures request plus explicitly supplied metadata/files; cannot infer hidden process memory |

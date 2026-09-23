@@ -4,6 +4,22 @@ import json
 import os
 from pathlib import Path
 import tempfile
+import time
+
+
+def sharing_retry(operation):
+    """Bounded retry for transient Windows reader/replace sharing violations."""
+    for attempt in range(6):
+        try:
+            return operation()
+        except PermissionError:
+            if attempt == 5:
+                raise
+            time.sleep(0.02 * (2**attempt))
+
+
+def read_json(path):
+    return loads(sharing_retry(lambda: Path(path).read_text(encoding="utf-8")))
 
 
 def dumps(value):
@@ -33,7 +49,7 @@ def atomic_write(path: Path, text: str):
             stream.write(text)
             stream.flush()
             os.fsync(stream.fileno())
-        os.replace(temp, path)
+        sharing_retry(lambda: os.replace(temp, path))
         if os.name != "nt":
             directory = os.open(path.parent, os.O_RDONLY)
             try:

@@ -107,6 +107,7 @@ def main(argv=None):
         "import-return",
         "desktop",
         "demo",
+        "proof",
     ):
         command = sub.add_parser(name)
         command.add_argument("project", nargs="?" if name == "desktop" else None, default=None)
@@ -174,7 +175,15 @@ def main(argv=None):
             print("Source unchanged. Connection settings: .inference_bridge/connection.json")
             return 0
         bridge = Bridge(args.project)
-        if args.command == "serve":
+        if args.command == "proof":
+            from .proof import run
+
+            print(
+                "Prompt Evolver is waiting. Export CATCH, obtain RETURN, then import it.",
+                flush=True,
+            )
+            print(json.dumps(run(args.project), indent=2))
+        elif args.command == "serve":
             settings = load_config(bridge)
             with BridgeServer(
                 bridge, port=args.port or settings["port"], token=settings["token"]

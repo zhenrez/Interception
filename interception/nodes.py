@@ -8,7 +8,7 @@ import runpy
 import sys
 
 from .bridge import Bridge, InferencePending
-from .files import loads, write_json
+from .files import read_json, write_json
 
 
 @contextmanager
@@ -56,7 +56,7 @@ def supervise(project, run_id, script=None):
     state_path = jobs / f"{key}.json"
     with node_lock(jobs / f"{key}.lock"):
         if state_path.exists():
-            state = loads(state_path.read_text(encoding="utf-8"))
+            state = read_json(state_path)
             if state["run_id"] != run_id or state["project"] != str(bridge.root):
                 raise ValueError("Stored node identity does not match")
             path = Path(state["script"])

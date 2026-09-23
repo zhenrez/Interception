@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feat/chatgpt-plugin-mailbox
+      - feat/operational-inference
   workflow_dispatch:
 
 permissions:
@@ -16,11 +17,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Stage clean package
         run: |
-          mkdir -p staging/Interception-MVP
-          rsync -a             --exclude='.git'             --exclude='.venv'             --exclude='artifacts/launcher-failure.txt'             --exclude='artifacts/launcher-success.json'             ./ staging/Interception-MVP/
+          git archive --format=zip --prefix=Interception/ --output=Interception-MVP.zip HEAD
       - name: Upload ZIP artifact
         uses: actions/upload-artifact@v4
         with:
           name: Interception-MVP
-          path: staging/Interception-MVP
+          path: Interception-MVP.zip
           if-no-files-found: error
