@@ -124,8 +124,7 @@ def test_ollama_native_http_marks_project_owned_inference(tmp_path):
 
 def test_host_cli_subprocess_marks_host_runtime_boundary(tmp_path):
     (tmp_path / "orchestrator.py").write_text(
-        "import subprocess\n"
-        'subprocess.run(["claude", "-p", prompt], check=True)\n',
+        'import subprocess\nsubprocess.run(["claude", "-p", prompt], check=True)\n',
         encoding="utf-8",
     )
     result = assess(tmp_path)
