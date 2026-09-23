@@ -365,7 +365,7 @@ Tcl/Tk enabled, then run Start-Interception.cmd again.
     }
 
     Write-Step 'Running an isolated mailbox-install smoke test'
-    $Smoke = 'import tempfile; from pathlib import Path; from interception.cli import install; t=tempfile.TemporaryDirectory(); install(t.name); assert (Path(t.name)/".inference_bridge"/"connection.json").is_file(); t.cleanup()'
+    $Smoke = "import tempfile; from pathlib import Path; from interception.cli import install; t=tempfile.TemporaryDirectory(); install(t.name); assert Path(t.name).joinpath('.inference_bridge','connection.json').is_file(); t.cleanup()"
     & $VenvPython -I -c $Smoke
     if ($LASTEXITCODE -ne 0) {
         throw 'Interception mailbox smoke test failed.'
