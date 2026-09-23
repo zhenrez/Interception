@@ -8,3 +8,5 @@ build/
 dist/
 .inference_bridge/
 .env
+artifacts/launcher-failure.txt
+artifacts/launcher-success.json
