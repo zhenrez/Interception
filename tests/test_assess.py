@@ -77,3 +77,19 @@ def test_host_runtime_marker_is_candidate_not_proof(tmp_path):
     assert result["recommended_interception"] == "host_runtime_adapter_candidate"
     assert result["continuation_strategy"] == "UNVERIFIED"
     assert result["continuation_candidates"] == ["HOST_RUNTIME_RESUME"]
+
+
+def test_mcp_tool_server_marks_external_client_boundary(tmp_path):
+    (tmp_path / "server.ts").write_text(
+        'import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";\n'
+        'const server = new McpServer({ name: "skills", version: "1" });\n'
+        'server.tool("think", "Return a protocol", {}, async () => ({\n'
+        '  content: [{ type: "text", text: "Execute this protocol" }]\n'
+        '}));\n',
+        encoding="utf-8",
+    )
+    result = assess(tmp_path)
+    assert result["inference_boundary_owner"] == "EXTERNAL_CLIENT_CANDIDATE"
+    assert result["protocol_surfaces"] == ["MCP_SERVER"]
+    assert result["recommended_interception"] == "mcp_host_adapter_candidate"
+    assert result["continuation_strategy"] == "UNVERIFIED"
