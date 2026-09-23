@@ -193,7 +193,9 @@ def assess(project):
                                 "file": relative,
                                 "line": line_no,
                                 "status": "STATIC_CANDIDATE",
-                                "provenance": "TEXTUAL_REFERENCE" if runtime_path else "NON_RUNTIME_REFERENCE",
+                                "provenance": "TEXTUAL_REFERENCE"
+                                if runtime_path
+                                else "NON_RUNTIME_REFERENCE",
                             }
                         )
                         if runtime_path:
