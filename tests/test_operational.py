@@ -157,7 +157,9 @@ def test_project_brief_is_isolated_versioned_and_rejects_stale_edits(tmp_path):
     assert brief.load(a) == second
     handoff = brief.handoff(a)
     assert "Finish revised A" in handoff and "No paid APIs" in handoff
-    assert str(left) in handoff and str(right) not in handoff
+    exported = files.loads(handoff.split("```json\n", 1)[1].rsplit("```", 1)[0])
+    assert exported["project_root"] == str(left)
+    assert exported["project_root"] != str(right)
     assert "acceptance" in handoff.lower()
 
 
