@@ -63,7 +63,7 @@ def _is_runtime_path(relative):
 
 
 def _host_cli_candidates(text):
-    if not re.search(r"\\b(?:subprocess\\.(?:run|Popen)|spawn|execFile|exec)\\s*\\(", text):
+    if not re.search(r"\b(?:subprocess\.(?:run|Popen)|spawn|execFile|exec)\s*\(", text):
         return set()
     found = set()
     for executable, runtime in HOST_CLI_NAMES.items():
@@ -74,10 +74,10 @@ def _host_cli_candidates(text):
 
 def _runtime_protocol_surfaces(text, runtime_signals):
     surfaces = set()
-    if "langchain" in runtime_signals and re.search(r"\\.a?invoke\\s*\\(", text):
+    if "langchain" in runtime_signals and re.search(r"\.a?invoke\s*\(", text):
         surfaces.add("LANGCHAIN_MODEL")
-    if re.search(r"/api/(?:generate|chat)\\b", text) and re.search(
-        r"\\b(?:httpx|requests|aiohttp|fetch)\\b", text
+    if re.search(r"/api/(?:generate|chat)\b", text) and re.search(
+        r"\b(?:httpx|requests|aiohttp|fetch)\b", text
     ):
         surfaces.add("OLLAMA_NATIVE")
     return surfaces
