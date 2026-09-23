@@ -357,3 +357,31 @@ def test_windows_launcher_uses_hardened_repo_local_bootstrap():
         ".venv",
     ):
         assert required in powershell
+
+
+def test_windows_launcher_uses_hardened_repo_local_bootstrap():
+    root = Path(__file__).resolve().parents[1]
+    command = (root / "Start-Interception.cmd").read_text(encoding="utf-8")
+    script = root / "scripts" / "start-windows.ps1"
+
+    assert "scripts\\start-windows.ps1" in command
+    assert "WindowsPowerShell\\v1.0\\powershell.exe" in command
+    assert script.is_file()
+
+    powershell = script.read_text(encoding="utf-8")
+    for required in (
+        "Select-BasePython",
+        "Test-ForbiddenPythonPath",
+        "Clear-ContaminatingEnvironment",
+        "Test-Venv",
+        "Remove-IncompatibleVenv",
+        "PIP_CONFIG_FILE",
+        "PYTHONNOUSERSITE",
+        "ensurepip",
+        "--index-url",
+        "https://pypi.org/simple",
+        "tkinter",
+        "launcher-failure.txt",
+        ".venv",
+    ):
+        assert required in powershell
