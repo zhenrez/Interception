@@ -85,7 +85,7 @@ def test_mcp_tool_server_marks_external_client_boundary(tmp_path):
         'const server = new McpServer({ name: "skills", version: "1" });\n'
         'server.tool("think", "Return a protocol", {}, async () => ({\n'
         '  content: [{ type: "text", text: "Execute this protocol" }]\n'
-        '}));\n',
+        "}));\n",
         encoding="utf-8",
     )
     result = assess(tmp_path)
