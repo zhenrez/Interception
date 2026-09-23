@@ -277,8 +277,16 @@ function Test-RelayPrerequisites {
         return 'missing'
     }
 
-    & $Gh.Source auth status --hostname github.com *> $null
-    if ($LASTEXITCODE -ne 0) {
+    $PreviousErrorAction = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        & $Gh.Source auth status --hostname github.com *> $null
+        $AuthExit = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $PreviousErrorAction
+    }
+    if ($AuthExit -ne 0) {
         Write-Host "GitHub relay note: gh.exe is installed but not authenticated." -ForegroundColor DarkYellow
         Write-Host "Run: gh auth login" -ForegroundColor DarkYellow
         return 'unauthenticated'
