@@ -39,6 +39,7 @@ SIGNALS = {
 }
 PROVIDER_SIGNALS = {"openai", "anthropic"}
 FRAMEWORK_SIGNALS = {"litellm", "langchain", "langgraph", "crewai", "autogen", "llamaindex"}
+MCP_SERVER_PATTERN = re.compile(r"@modelcontextprotocol/sdk/server|\\bMcpServer\\b")
 HOST_RUNTIME_MARKERS = {
     ".claude": "claude_code",
     ".codex": "codex",
@@ -117,6 +118,7 @@ def assess(project):
     host_runtimes = sorted(
         runtime for marker, runtime in HOST_RUNTIME_MARKERS.items() if (root / marker).exists()
     )
+    protocol_surfaces = set()
     for directory, dirs, names in os.walk(root, followlinks=False):
         dirs[:] = sorted(
             d
@@ -157,6 +159,8 @@ def assess(project):
                             }
                         )
             runtime_signals.update(_source_runtime_signals(path, text))
+            if MCP_SERVER_PATTERN.search(text):
+                protocol_surfaces.add("MCP_SERVER")
             if path.suffix == ".py":
                 try:
                     tree = ast.parse(text)
@@ -190,6 +194,8 @@ def assess(project):
     protocol = _direct_protocol(calls)
     if protocol != "NOT_DETECTED":
         boundary_owner = "PROJECT"
+    elif "MCP_SERVER" in protocol_surfaces:
+        boundary_owner = "EXTERNAL_CLIENT_CANDIDATE"
     elif host_runtimes:
         boundary_owner = "HOST_RUNTIME_CANDIDATE"
     else:
@@ -197,6 +203,8 @@ def assess(project):
 
     if protocol == "OPENAI_CHAT_COMPLETIONS":
         recommended = "openai_compatible_proxy_candidate"
+    elif "MCP_SERVER" in protocol_surfaces:
+        recommended = "mcp_host_adapter_candidate"
     elif boundary_owner == "HOST_RUNTIME_CANDIDATE":
         recommended = "host_runtime_adapter_candidate"
     else:
@@ -236,6 +244,7 @@ def assess(project):
         "providers": sorted(runtime_signals & PROVIDER_SIGNALS),
         "textual_references": sorted(detected & (PROVIDER_SIGNALS | FRAMEWORK_SIGNALS)),
         "host_runtime_candidates": host_runtimes,
+        "protocol_surfaces": sorted(protocol_surfaces),
         "inference_boundary_owner": boundary_owner,
         "direct_inference_protocol": protocol,
         "evidence": evidence,
