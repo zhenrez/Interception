@@ -149,3 +149,159 @@ def test_test_fixture_inference_call_is_not_runtime_evidence(tmp_path):
     assert result["direct_inference_protocol"] == "NOT_DETECTED"
     assert result["inference_boundary_owner"] == "UNKNOWN"
     assert result["recommended_interception"] == "explicit_sdk_adapter"
+
+
+def test_multiple_inference_surfaces_are_reported_without_collapsing_ownership(tmp_path):
+    (tmp_path / "direct.py").write_text(
+        "from openai import OpenAI\n"
+        "client = OpenAI()\n"
+        'client.chat.completions.create(model="x", messages=[])\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "framework.py").write_text(
+        "from langchain_groq import ChatGroq\n"
+        'llm = ChatGroq(model="llama")\n'
+        "llm.invoke(prompt)\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "server.ts").write_text(
+        'import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";\n'
+        'const server = new McpServer({ name: "bridge", version: "1" });\n',
+        encoding="utf-8",
+    )
+    result = assess(tmp_path)
+    assert result["assessment_version"] == 3
+    assert {surface["invocation_protocol"] for surface in result["inference_surfaces"]} == {
+        "OPENAI_CHAT_COMPLETIONS",
+        "LANGCHAIN_MODEL",
+        "MCP_SERVER",
+    }
+    assert {surface["owner"] for surface in result["inference_surfaces"]} == {
+        "PROJECT",
+        "FRAMEWORK_CANDIDATE",
+        "EXTERNAL_CLIENT_CANDIDATE",
+    }
+    assert result["inference_boundary_owner"] == "MULTIPLE"
+    assert result["direct_inference_protocol"] == "MULTIPLE"
+
+
+def test_notebook_and_additional_source_languages_are_discovered(tmp_path):
+    notebook = {
+        "cells": [
+            {
+                "cell_type": "markdown",
+                "metadata": {},
+                "source": ["OpenAI appears here only as documentation."],
+            },
+            {
+                "cell_type": "code",
+                "metadata": {},
+                "source": [
+                    "from google import genai\n",
+                    "client = genai.Client(api_key='x')\n",
+                    "client.models.generate_content(model='gemini', contents='hi')\n",
+                ],
+            },
+        ],
+        "metadata": {},
+        "nbformat": 4,
+        "nbformat_minor": 5,
+    }
+    (tmp_path / "experiment.ipynb").write_text(json.dumps(notebook), encoding="utf-8")
+    (tmp_path / "router.go").write_text(
+        'package main\n// runtime call\nurl := base + "/v1/chat/completions"\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "planner.cs").write_text(
+        'var endpoint = baseUrl + "/v1/messages";\n',
+        encoding="utf-8",
+    )
+    (tmp_path / "run.sh").write_text('claude -p "$PROMPT"\n', encoding="utf-8")
+    (tmp_path / "run.ps1").write_text('codex exec $Prompt\n', encoding="utf-8")
+
+    result = assess(tmp_path)
+
+    assert set(result["source_languages"]) >= {
+        "jupyter_python",
+        "go",
+        "csharp",
+        "shell",
+        "powershell",
+    }
+    protocols = {surface["invocation_protocol"] for surface in result["inference_surfaces"]}
+    assert "GEMINI_GENERATE_CONTENT" in protocols
+    assert "OPENAI_CHAT_COMPLETIONS" in protocols
+    assert "ANTHROPIC_MESSAGES_UNSUPPORTED" in protocols
+    assert "HOST_CLI_SUBPROCESS" in protocols
+    notebook_surface = next(
+        surface
+        for surface in result["inference_surfaces"]
+        if surface["invocation_protocol"] == "GEMINI_GENERATE_CONTENT"
+    )
+    assert notebook_surface["evidence"][0]["file"] == "experiment.ipynb"
+    assert notebook_surface["evidence"][0]["cell"] == 2
+
+
+def test_durable_job_resume_requires_full_queue_lifecycle_and_reports_lineage(tmp_path):
+    (tmp_path / "storage.py").write_text(
+        "import sqlite3\n"
+        "def enqueue_task(): pass\n"
+        "def dequeue_task(): pass\n"
+        "def complete_task(): pass\n"
+        "def fail_task(): pass\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "worker.py").write_text(
+        "from openai import OpenAI\n"
+        "client = OpenAI()\n"
+        "run_id = session_id = parent_request_id = root_request_id = 'x'\n"
+        "agent_id = workspace_id = environment_id = 'x'\n"
+        "task = dequeue_task()\n"
+        'client.chat.completions.create(model="x", messages=[])\n'
+        "complete_task(task)\n"
+        "fail_task(task)\n",
+        encoding="utf-8",
+    )
+
+    result = assess(tmp_path)
+
+    assert "DURABLE_JOB_RESUME" in result["continuation_candidates"]
+    assert result["durable_job_resume"]["status"] == "STATIC_CANDIDATE"
+    assert set(result["durable_job_resume"]["signals"]) == {
+        "PERSISTENT_STORE",
+        "ENQUEUE",
+        "CLAIM",
+        "COMPLETE",
+        "FAIL",
+    }
+    assert set(result["lineage_candidates"]) == {
+        "agent",
+        "environment",
+        "parent_request",
+        "root_request",
+        "run",
+        "session",
+        "workspace",
+    }
+    direct = next(
+        surface
+        for surface in result["inference_surfaces"]
+        if surface["invocation_protocol"] == "OPENAI_CHAT_COMPLETIONS"
+    )
+    assert "DURABLE_JOB_RESUME" in direct["continuation_candidates"]
+    assert set(direct["lineage_fields"]) == set(result["lineage_candidates"])
+
+
+def test_queue_keyword_alone_does_not_claim_durable_job_resume(tmp_path):
+    (tmp_path / "agent.py").write_text(
+        "from openai import OpenAI\n"
+        "client = OpenAI()\n"
+        "queue = []\n"
+        'client.chat.completions.create(model="x", messages=[])\n',
+        encoding="utf-8",
+    )
+
+    result = assess(tmp_path)
+
+    assert "DURABLE_JOB_RESUME" not in result["continuation_candidates"]
+    assert result["durable_job_resume"]["status"] == "NOT_ESTABLISHED"
