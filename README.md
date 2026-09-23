@@ -8,9 +8,11 @@ The core makes no inference API calls.
 
 ## Start on Windows
 
-1. Download this repository (GitHub **Code → Download ZIP**) and extract it.
-2. Double-click **Start-Interception.cmd**. It selects CPython 3.13, 3.11, or 3.12, creates
-   an isolated environment, and installs the package from PyPI using isolated pip settings.
+1. Download this repository (GitHub **Code → Download ZIP**) and extract it to a local drive.
+2. Double-click **Start-Interception.cmd**. The hardened bootstrap deliberately selects a clean
+   64-bit python.org-style CPython 3.13 or 3.11, creates/repairs the repository-local `.venv`,
+   strips inherited Conda/NVIDIA/CUDA/Python/pip contamination, forces isolated PyPI dependency
+   resolution, verifies Tcl/Tk and the bridge, and then opens the desktop.
 3. Choose your agent project's folder and click **Start bridge**.
 4. For a first mailbox test, click **Create test request → Export batch for ChatGPT**.
 5. Upload that batch to ChatGPT and say **“Fulfill these inference requests.”**
@@ -21,9 +23,12 @@ connection settings at `.inference_bridge/connection.json`. It does not rewrite 
 source code. Set the agent's OpenAI Chat Completions client to those settings, or use the Python
 adapter below. A project with an unsupported protocol or workflow deadline needs an adapter.
 
-The desktop launcher requires CPython with Tcl/Tk. The CLI works without a GUI.
-The Windows launcher and OS locking have Windows CI coverage configured; see the current Actions
-run for verified platforms. Local development was verified on Linux/Python 3.12.
+The desktop launcher requires official 64-bit CPython 3.13 or 3.11 with Tcl/Tk. The CLI works
+without a GUI. The launcher will replace only this repository's incompatible `.venv`; it never
+changes global Python, Conda, CUDA or NVIDIA installations. Failures are written to
+`artifacts/launcher-failure.txt`. For a setup-only check, run
+`Start-Interception.cmd -VerifyOnly`. GitHub CLI authentication is checked for relay readiness
+but is not required for core/local operation.
 
 ## What works
 
