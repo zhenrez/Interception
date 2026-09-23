@@ -278,9 +278,7 @@ def _record_text_evidence(
                     "file": relative,
                     "line": line_no,
                     "status": "STATIC_CANDIDATE",
-                    "provenance": "TEXTUAL_REFERENCE"
-                    if runtime_path
-                    else "NON_RUNTIME_REFERENCE",
+                    "provenance": "TEXTUAL_REFERENCE" if runtime_path else "NON_RUNTIME_REFERENCE",
                 }
                 if cell is not None:
                     item["cell"] = cell
@@ -504,7 +502,9 @@ def assess(project):
                         )
                         python_signals = set()
                     runtime_signals.update(python_signals)
-                    source_signals = _source_runtime_signals(path, cell_text) if runtime_path else set()
+                    source_signals = (
+                        _source_runtime_signals(path, cell_text) if runtime_path else set()
+                    )
                     runtime_signals.update(source_signals)
                     _scan_runtime_surfaces(
                         path=path,
@@ -561,9 +561,7 @@ def assess(project):
     durable_signals = set(durable_evidence)
     durable_established = DURABLE_JOB_REQUIRED <= durable_signals
     durable_files = {
-        item["file"]
-        for signal in DURABLE_JOB_REQUIRED
-        for item in durable_evidence.get(signal, [])
+        item["file"] for signal in DURABLE_JOB_REQUIRED for item in durable_evidence.get(signal, [])
     }
     lineage_candidates = set().union(*lineage_by_file.values()) if lineage_by_file else set()
 
@@ -644,9 +642,7 @@ def assess(project):
             "status": "STATIC_CANDIDATE" if durable_established else "NOT_ESTABLISHED",
             "signals": sorted(durable_signals),
             "evidence": [
-                item
-                for signal in sorted(durable_evidence)
-                for item in durable_evidence[signal]
+                item for signal in sorted(durable_evidence) for item in durable_evidence[signal]
             ],
         },
         "lineage_candidates": sorted(lineage_candidates),
