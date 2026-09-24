@@ -15,9 +15,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Stage clean package
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Build offline Windows wheelhouses
+        shell: bash
         run: |
-          git archive --format=zip --prefix=Interception/ --output=Interception-MVP.zip HEAD
+          set -euo pipefail
+          python -m pip install --upgrade pip setuptools wheel
+          mkdir -p dist-wheel wheelhouse/py3.13-win_amd64 wheelhouse/py3.11-win_amd64
+          python -m pip wheel --no-deps . -w dist-wheel
+
+          python -m pip download --only-binary=:all:             --platform win_amd64 --implementation cp --python-version 3.13 --abi cp313             --dest wheelhouse/py3.13-win_amd64 'jsonschema>=4.23,<5'
+          python -m pip download --only-binary=:all:             --platform win_amd64 --implementation cp --python-version 3.11 --abi cp311             --dest wheelhouse/py3.11-win_amd64 'jsonschema>=4.23,<5'
+
+          cp dist-wheel/interception_bridge-*.whl wheelhouse/py3.13-win_amd64/
+          cp dist-wheel/interception_bridge-*.whl wheelhouse/py3.11-win_amd64/
+
+      - name: Stage self-contained Windows package
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf package
+          mkdir -p package/Interception
+          git archive HEAD | tar -x -C package/Interception
+          cp -R wheelhouse package/Interception/
+          cd package
+          zip -qr ../Interception-MVP.zip Interception
+
       - name: Upload ZIP artifact
         uses: actions/upload-artifact@v4
         with:
