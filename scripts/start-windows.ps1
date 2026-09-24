@@ -329,14 +329,17 @@ try {
         throw 'Interception dependency installation failed.'
     }
 
-    Write-Step 'Verifying Tcl/Tk and required Python imports'
-    & $VenvPython -I -c "import interception, jsonschema, tkinter; root=tkinter.Tcl(); assert root.call('info','patchlevel')"
+    Write-Step 'Verifying required Interception runtime imports'
+    & $VenvPython -I -c "import interception, jsonschema"
     if ($LASTEXITCODE -ne 0) {
-        throw @"
-Interception could not import its required runtime or Tcl/Tk. If tkinter is the
-failure, modify/reinstall the official python.org CPython installation with
-Tcl/Tk enabled, then run Start-Interception.cmd again.
-"@
+        throw 'Interception could not import its required runtime dependencies.'
+    }
+
+    Write-Step 'Checking optional desktop Tcl/Tk support'
+    & $VenvPython -I -c "import tkinter; root=tkinter.Tcl(); assert root.call('info','patchlevel')" *> $null
+    $DesktopAvailable = ($LASTEXITCODE -eq 0)
+    if (-not $DesktopAvailable) {
+        Write-Host 'Desktop Tcl/Tk is unavailable. Interception core is healthy; using headless mode.' -ForegroundColor Yellow
     }
 
     Write-Step 'Compiling Interception Python sources'
@@ -358,6 +361,7 @@ Tcl/Tk enabled, then run Start-Interception.cmd again.
         python = $Base.Version
         python_executable = $Base.Executable
         venv = $Venv
+        desktop_available = $DesktopAvailable
     } | ConvertTo-Json
     Set-Content -LiteralPath $SuccessLog -Value $Success -Encoding UTF8
 
@@ -365,6 +369,9 @@ Tcl/Tk enabled, then run Start-Interception.cmd again.
         Write-Host ""
         Write-Host 'Windows one-click bootstrap verification passed.' -ForegroundColor Green
         Write-Host "Environment: $Venv"
+        if (-not $DesktopAvailable) {
+            Write-Host 'Desktop UI unavailable; CLI/headless Interception remains usable.' -ForegroundColor Yellow
+        }
         exit 0
     }
 
@@ -378,15 +385,36 @@ Tcl/Tk enabled, then run Start-Interception.cmd again.
         $ResolvedProject = $null
     }
 
-    Write-Step 'Launching Interception desktop'
-    if ($ResolvedProject) {
-        & $VenvPython -I -m interception desktop $ResolvedProject
+    if ($DesktopAvailable) {
+        Write-Step 'Launching Interception desktop'
+        if ($ResolvedProject) {
+            & $VenvPython -I -m interception desktop $ResolvedProject
+        }
+        else {
+            & $VenvPython -I -m interception desktop
+        }
+        if ($LASTEXITCODE -ne 0) {
+            throw "Interception desktop exited with code $LASTEXITCODE."
+        }
     }
     else {
-        & $VenvPython -I -m interception desktop
-    }
-    if ($LASTEXITCODE -ne 0) {
-        throw "Interception desktop exited with code $LASTEXITCODE."
+        Write-Step 'Launching Interception in headless mode'
+        if ($ResolvedProject) {
+            & $VenvPython -I -m interception install $ResolvedProject
+            if ($LASTEXITCODE -ne 0) {
+                throw "Interception project initialization exited with code $LASTEXITCODE."
+            }
+            Write-Host ''
+            Write-Host 'Interception is ready without the desktop UI.' -ForegroundColor Green
+            Write-Host "Project: $ResolvedProject"
+            Write-Host 'Use the CLI commands status/proof/batch/import-return until Tcl/Tk is restored.'
+        }
+        else {
+            Write-Host ''
+            Write-Host 'Interception core is installed and verified.' -ForegroundColor Green
+            Write-Host 'Desktop UI is unavailable because this Python install cannot load Tcl/Tk.'
+            Write-Host 'Run this launcher again with -Project followed by a project folder for headless setup.'
+        }
     }
 }
 catch {
