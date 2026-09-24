@@ -187,7 +187,7 @@ Miniforge/Mambaforge, Windows Store aliases, unrelated virtual environments,
 and non-CPython runtimes.
 
 Install the official 64-bit CPython build from python.org with the Python
-Launcher and Tcl/Tk enabled, then run Start-Interception.cmd again.
+Launcher enabled, then run Start-Interception.cmd again.
 "@
 }
 
@@ -323,10 +323,29 @@ try {
         }
     }
 
-    Write-Step 'Installing Interception with outside pip configuration disabled'
-    & $VenvPython -I -m pip install --isolated --disable-pip-version-check --no-input --index-url https://pypi.org/simple -e '.[openai]'
-    if ($LASTEXITCODE -ne 0) {
-        throw 'Interception dependency installation failed.'
+    $RuntimeReady = $false
+    try {
+        & $VenvPython -I -c "import interception, jsonschema" *> $null
+        $RuntimeReady = ($LASTEXITCODE -eq 0)
+    }
+    catch { $RuntimeReady = $false }
+
+    if (-not $RuntimeReady) {
+        $Wheelhouse = Join-Path $Root ('wheelhouse\\py' + $Base.Minor + '-win_amd64')
+        if (Test-Path -LiteralPath $Wheelhouse -PathType Container) {
+            Write-Step 'Installing Interception from the bundled offline wheelhouse'
+            & $VenvPython -I -m pip install --disable-pip-version-check --no-input --no-index --find-links $Wheelhouse interception-bridge==0.1.0
+        }
+        else {
+            Write-Step 'Installing Interception with ARIADNE-style pip isolation'
+            & $VenvPython -I -m pip install --disable-pip-version-check --no-input --index-url https://pypi.org/simple -e .
+        }
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Interception dependency installation failed.'
+        }
+    }
+    else {
+        Write-Step 'Reusing the verified repository-local Interception environment'
     }
 
     Write-Step 'Verifying required Interception runtime imports'
@@ -335,11 +354,28 @@ try {
         throw 'Interception could not import its required runtime dependencies.'
     }
 
-    Write-Step 'Checking optional desktop Tcl/Tk support'
-    & $VenvPython -I -c "import tkinter; root=tkinter.Tcl(); assert root.call('info','patchlevel')" *> $null
-    $DesktopAvailable = ($LASTEXITCODE -eq 0)
-    if (-not $DesktopAvailable) {
-        Write-Host 'Desktop Tcl/Tk is unavailable. Interception core is healthy; using headless mode.' -ForegroundColor Yellow
+    Write-Step 'Checking optional desktop Tcl/Tk files'
+    Remove-Item Env:TCL_LIBRARY -ErrorAction SilentlyContinue
+    Remove-Item Env:TK_LIBRARY -ErrorAction SilentlyContinue
+    $PythonHome = Split-Path -Parent $Base.Executable
+    $TclRoot = Join-Path $PythonHome 'tcl'
+    $TclLibrary = $null
+    $TkLibrary = $null
+    if (Test-Path -LiteralPath $TclRoot -PathType Container) {
+        $TclLibrary = Get-ChildItem -LiteralPath $TclRoot -Directory -Filter 'tcl8.*' -ErrorAction SilentlyContinue |
+            Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'init.tcl') } |
+            Sort-Object Name -Descending | Select-Object -First 1
+        $TkLibrary = Get-ChildItem -LiteralPath $TclRoot -Directory -Filter 'tk8.*' -ErrorAction SilentlyContinue |
+            Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'tk.tcl') } |
+            Sort-Object Name -Descending | Select-Object -First 1
+    }
+    $DesktopAvailable = ($null -ne $TclLibrary -and $null -ne $TkLibrary)
+    if ($DesktopAvailable) {
+        $env:TCL_LIBRARY = $TclLibrary.FullName
+        $env:TK_LIBRARY = $TkLibrary.FullName
+    }
+    else {
+        Write-Host 'Desktop Tcl/Tk files are unavailable. Interception core is healthy; using headless mode.' -ForegroundColor Yellow
     }
 
     Write-Step 'Compiling Interception Python sources'
