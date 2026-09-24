@@ -266,17 +266,12 @@ class GitHubRelay:
             )
         return {"published_files": len(changes), "imported": imported, "errors": errors}
 
-    def watch(self, interval=30, *, gmail=False):
-        import smtplib
-        from .gmail_wakeup import notify_gmail
-
+    def watch(self, interval=30):
         if interval < 10:
             raise ValueError("Relay interval must be at least 10 seconds")
         while True:
             try:
                 print(json.dumps(self.sync()), flush=True)
-                if gmail:
-                    notify_gmail(self)
-            except (GitHubError, subprocess.TimeoutExpired, smtplib.SMTPException, OSError) as exc:
+            except (GitHubError, subprocess.TimeoutExpired, OSError) as exc:
                 print(f"Relay delayed: {exc}. Local requests are retained.", flush=True)
             time.sleep(interval)
