@@ -70,13 +70,7 @@ def import_return(bridge, source):
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Interception — durable manual inference bridge")
     sub = parser.add_subparsers(dest="command", required=True)
-    for name in (
-        "relay-configure",
-        "relay-sync",
-        "relay-watch",
-        "relay-automation",
-        "relay-gmail-configure",
-    ):
+    for name in ("relay-configure", "relay-sync", "relay-watch", "relay-automation"):
         command = sub.add_parser(name)
         command.add_argument("project")
         if name == "relay-configure":
@@ -84,11 +78,6 @@ def main(argv=None):
             command.add_argument("pr_number", type=int)
         if name == "relay-watch":
             command.add_argument("--interval", type=int, default=30)
-        if name in {"relay-sync", "relay-watch", "relay-automation"}:
-            command.add_argument("--gmail", action="store_true")
-        if name == "relay-gmail-configure":
-            command.add_argument("sender")
-            command.add_argument("recipient")
     for name in ("run-node", "resume-node"):
         command = sub.add_parser(name)
         command.add_argument("project")
@@ -126,7 +115,6 @@ def main(argv=None):
     try:
         if args.command.startswith("relay-"):
             from .github_relay import GitHubRelay, automation_spec, configure
-            from .gmail_wakeup import configure_gmail, gmail_spec, notify_gmail
 
             if args.command == "relay-configure":
                 print(
@@ -134,24 +122,12 @@ def main(argv=None):
                 )
             else:
                 relay = GitHubRelay(args.project)
-                if args.command == "relay-gmail-configure":
-                    print(
-                        json.dumps(
-                            configure_gmail(relay.bridge, args.sender, args.recipient), indent=2
-                        )
-                    )
-                elif args.command == "relay-sync":
+                if args.command == "relay-sync":
                     print(json.dumps(relay.sync(), indent=2))
-                    if args.gmail:
-                        notify_gmail(relay)
                 elif args.command == "relay-watch":
-                    relay.watch(args.interval, gmail=args.gmail)
+                    relay.watch(args.interval)
                 else:
-                    spec = automation_spec(relay.config)
-                    if args.gmail:
-                        config = loads((relay.bridge.home / "gmail-wakeup.json").read_text())
-                        spec = gmail_spec(relay.config, config["sender"], spec)
-                    print(json.dumps(spec, indent=2))
+                    print(json.dumps(automation_spec(relay.config), indent=2))
             return 0
         if args.command in {"run-node", "resume-node"}:
             from .nodes import supervise
