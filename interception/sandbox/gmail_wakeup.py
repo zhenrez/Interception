@@ -19,7 +19,7 @@ STATE_NAME = "gmail-sandbox-sent.json"
 
 
 def _address(value):
-    if not isinstance(value, str) or not re.fullmatch(r"[^\\s<>@]+@[^\\s<>@]+\\.[^\\s<>@]+", value):
+    if not isinstance(value, str) or not re.fullmatch(r"[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+", value):
         raise ValueError("Use a plain email address")
     return value
 
