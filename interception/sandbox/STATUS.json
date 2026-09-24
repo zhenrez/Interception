@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "scope": "temporary-gmail-wakeup-sandbox",
+  "branch": "sandbox/gmail-wakeup-temp",
+  "production_candidate": {
+    "branch": "feat/operational-inference",
+    "sha": "f40632b85ea7b5a93813c50a81abf4565e18b298"
+  },
+  "verified_sandbox_head": "3ceb3d018378db24b1c8004366f63fda9e4e3c8f",
+  "isolation": {
+    "merge_base_sha": "f40632b85ea7b5a93813c50a81abf4565e18b298",
+    "behind_production_candidate_by": 0,
+    "gmail_files_are_sandbox_only": true,
+    "production_branch_modified": false
+  },
+  "repository_evidence": {
+    "ci_run_id": 35971265071,
+    "ci_conclusion": "success",
+    "open_pull_request": false,
+    "fail_closed_enable_marker_tested": true,
+    "email_excludes_request_id": true,
+    "email_excludes_payload_metadata": true,
+    "email_excludes_repository_url": true,
+    "duplicate_wake_suppression_tested": true,
+    "github_remains_authoritative_catch_return_store": true
+  },
+  "runtime_evidence": {
+    "local_windows_runtime_observed": false,
+    "smtp_credentials_observed": false,
+    "real_gmail_send_observed": false,
+    "real_catch_wake_return_round_trip_observed": false
+  },
+  "operational_status": "repository-ready-runtime-unverified",
+  "blocker": "A real end-to-end wake cannot be established without the owner-local runtime, explicit enable marker/configuration, and Gmail SMTP credential. Repository tests do not prove those external runtime conditions.",
+  "next_safe_increment": "When the owner-local runtime is available, enable the disposable sandbox, publish one non-sensitive test CATCH, observe exactly one Gmail wake, complete one RETURN, verify caller resume, then disable the marker and confirm no further wake is sent.",
+  "removal": "Delete the local ENABLE_TEMP_GMAIL_SANDBOX marker to disable immediately; delete this sandbox branch/package when the direct GitHub Work trigger is available. No production-branch change is required."
+}
