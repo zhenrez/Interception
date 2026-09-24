@@ -95,38 +95,20 @@ private repo → Work event → returned JSON → local resume path, including w
 required for that account. Respect task/account rate limits and unfinished-batch reports. Notifications
 can be enabled through ChatGPT's own task notification settings; this branch does not change them.
 
-## Gmail wake-up alternative (user-requested)
 
-**Gmail can start a Work task.** The connected Gmail profile and `message` webhook schema were
-successfully read in this session. The schema supports sender and subject regex filters.
-Gmail can therefore replace the GitHub PR trigger while GitHub continues to store private packets.
-Choose one wake-up source, not both for the same mailbox.
+## MVP trigger decision
 
-The optional sender sends only a pending-request count and a mailbox/digest identifier. No prompt,
-checkpoint, code, credentials or private repository URL is put in the email. The Work task fetches
-the actual triggering message, verifies its narrowly matched sender/subject, and then uses its fixed
-private mailbox configuration. Email contents cannot redirect it to a different repository.
+The MVP uses the GitHub PR commit-update event directly as the ChatGPT Work wake-up.
+No Gmail sender, SMTP credential, app password, email digest state, or secondary notification
+transport is required. GitHub is the durable mailbox, event source, and RETURN channel.
 
-```bash
-interception relay-gmail-configure /path/to/project sender@gmail.com your-connected-inbox@gmail.com
-interception relay-automation /path/to/project --gmail
-interception relay-watch /path/to/project --gmail
+The remaining live proof is therefore:
+
+```text
+local CATCH
+→ private GitHub mailbox PR commit
+→ ChatGPT Work trigger
+→ GitHub RETURN
+→ local relay import
+→ waiting caller resumes
 ```
-
-The last command explicitly enables sending. It uses Gmail SMTP over TLS with the sender's app
-password in the **local environment variable** `INTERCEPTION_SMTP_PASSWORD`. Do not put that password
-in GitHub, a CATCH packet, a chat, or `bridge.toml`. Google's app-password availability requires
-2-Step Verification and depends on account configuration; OAuth sign-in is not implemented here.
-The GitHub-trigger option requires no mail-sending credentials. Existing mail infrastructure can
-also supply the narrowly formatted wake-up message instead of using this optional SMTP sender.
-
-Before registering the Gmail automation, resolve/verify the sender through the connected Gmail
-account and verify read access to the private GitHub mailbox. No actual sender, recipient or secret
-is committed to this source repository. The generated spec does not by itself activate any task.
-
-Successful sends are deduplicated by the published pending-request set. Failed sends are retried;
-a crash after SMTP acceptance but before local receipt persistence may send a duplicate notification.
-The handler still skips existing RETURN files. A delivered email does not prove the Work task has
-finished; task failures, approval pauses, limits and remaining batch work remain visible blockers.
-
-Google reference: https://support.google.com/accounts/answer/185833
