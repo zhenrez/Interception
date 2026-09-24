@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/jmoles/prompt-evolver",
+  "revision": "6061b34a843b86ef2b1f08bc2f7060c649277e18",
+  "source_path": "src/prompt_evolver/llm.py",
+  "source_sha256": "48051f78ccd9ca00f8443e062d31e15608fe8a3a95c3103d322d491ffb7b5fef",
+  "local_patch": "Move LiteLLM import and logging assignment into normal complete() backend. No changes to judge_score, complete_json or LLMResponse. This permits the opted-in bridge instance to run without a provider SDK.",
+  "scope": "Inference wrapper and real judging operation; not the full evolutionary engine."
+}
