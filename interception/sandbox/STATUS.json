@@ -6,7 +6,7 @@
     "branch": "feat/operational-inference",
     "sha": "f40632b85ea7b5a93813c50a81abf4565e18b298"
   },
-  "verified_sandbox_head": "3ceb3d018378db24b1c8004366f63fda9e4e3c8f",
+  "verified_sandbox_head": "025d7d26d27a76ab8db8c96824b453ba40dbdbe3",
   "isolation": {
     "merge_base_sha": "f40632b85ea7b5a93813c50a81abf4565e18b298",
     "behind_production_candidate_by": 0,
@@ -22,7 +22,9 @@
     "email_excludes_payload_metadata": true,
     "email_excludes_repository_url": true,
     "duplicate_wake_suppression_tested": true,
-    "github_remains_authoritative_catch_return_store": true
+    "github_remains_authoritative_catch_return_store": true,
+    "exact_sender_subject_matching_verified": false,
+    "note": "Sandbox sender and deterministic subject generation are tested, but no repository evidence establishes an inbound/Work trigger that enforces an exact sender+subject match."
   },
   "runtime_evidence": {
     "local_windows_runtime_observed": false,
@@ -31,7 +33,7 @@
     "real_catch_wake_return_round_trip_observed": false
   },
   "operational_status": "repository-ready-runtime-unverified",
-  "blocker": "A real end-to-end wake cannot be established without the owner-local runtime, explicit enable marker/configuration, and Gmail SMTP credential. Repository tests do not prove those external runtime conditions.",
-  "next_safe_increment": "When the owner-local runtime is available, enable the disposable sandbox, publish one non-sensitive test CATCH, observe exactly one Gmail wake, complete one RETURN, verify caller resume, then disable the marker and confirm no further wake is sent.",
+  "blocker": "A real end-to-end wake cannot be established without the owner-local runtime, explicit enable marker/configuration, Gmail SMTP credential, and configured inbound/Work trigger. Exact inbound sender+subject matching is not repository-verified.",
+  "next_safe_increment": "When the owner-local runtime/trigger is available, configure the trigger to require the intended sender and Interception subject contract; publish one non-sensitive test CATCH, observe exactly one Gmail wake and one trigger, complete one RETURN, verify caller resume, then disable the marker and confirm no further wake is sent.",
   "removal": "Delete the local ENABLE_TEMP_GMAIL_SANDBOX marker to disable immediately; delete this sandbox branch/package when the direct GitHub Work trigger is available. No production-branch change is required."
 }
