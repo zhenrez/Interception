@@ -1,5 +1,3 @@
-from types import SimpleNamespace
-
 from interception import Bridge
 from interception.sandbox.gmail_wakeup import configure, disable
 
