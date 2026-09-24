@@ -46,8 +46,9 @@ nodes have a separate durable re-entry mechanism; arbitrary process restoration 
 ## What still needs connection
 
 Automatic remote wake-up requires a selected private GitHub mailbox, local GitHub authentication
-and an enabled Work trigger. Gmail is an optional wake-up route requiring separate mail credentials.
-Those account-specific connections are not configured by the ZIP. Never put live inference packets
+and an enabled GitHub commit-update Work trigger. GitHub is the only MVP wake path; no Gmail or SMTP
+configuration is required. Those account-specific connections are not configured by the ZIP.
+Never put live inference packets
 in the public Interception source repository. Setup remains in `plugin/README.md`.
 
 Chat currently performs project work. This desktop does not automatically edit arbitrary projects,
