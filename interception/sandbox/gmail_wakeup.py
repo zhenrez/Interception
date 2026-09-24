@@ -86,8 +86,12 @@ def notify(relay, *, send=None):
     if send is None:
         password = os.environ.get("INTERCEPTION_SMTP_PASSWORD")
         if not password:
-            raise ValueError("INTERCEPTION_SMTP_PASSWORD is required for the temporary Gmail sandbox")
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ssl.create_default_context(), timeout=30) as smtp:
+            raise ValueError(
+                "INTERCEPTION_SMTP_PASSWORD is required for the temporary Gmail sandbox"
+            )
+        with smtplib.SMTP_SSL(
+            "smtp.gmail.com", 465, context=ssl.create_default_context(), timeout=30
+        ) as smtp:
             smtp.login(cfg["sender"], password)
             smtp.send_message(message)
     else:
