@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "scope": "phone-only-cloud-sandbox",
+  "branch": "sandbox/phone-only-cloud",
+  "base": {
+    "branch": "main",
+    "sha": "4fb2cbc6684e7961203c68e29326a0a9ed88d20d"
+  },
+  "desktop_coupling": {
+    "reads_desktop_inference_bridge": false,
+    "writes_desktop_inference_bridge": false,
+    "imports_desktop_interception_code": false,
+    "requires_local_venv": false,
+    "requires_windows_process": false,
+    "requires_teamviewer": false,
+    "requires_smtp_helper": false,
+    "uses_desktop_mailbox_pr_2": false
+  },
+  "cloud_dependencies": {
+    "gmail_connected_app": true,
+    "chatgpt_work_event_trigger": true,
+    "github_connected_app": true,
+    "private_mailbox_repository": "zhenrez/chat-docs-versions-histories",
+    "private_mailbox_branch": "interception-phone-mailbox",
+    "private_mailbox_pr": 3
+  },
+  "failure_domain": "phone-only sandbox; failure must not affect desktop Interception"
+}
