@@ -1,4 +1,4 @@
-"""Project-scoped goal handoff and inference control panel."""
+"""Local control panel for target selection and inference routing."""
 
 import os
 import queue
@@ -8,7 +8,6 @@ import threading
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
-from . import brief
 from .bridge import Bridge
 from .cli import import_return, install, load_config
 from .contracts import validate_return
@@ -26,17 +25,31 @@ def open_folder(path):
 
 def launch(project=None):
     window = tk.Tk()
-    window.title("Interception — one project at a time")
-    window.geometry("900x820")
-    window.minsize(720, 700)
-    state = {"bridge": None, "server": None, "revision": 0, "worker": None}
+    window.title("Interception — Inference Router")
+    window.geometry("940x780")
+    window.minsize(760, 660)
+
+    state = {"bridge": None, "server": None, "worker": None, "assessment": None}
     stop, events = threading.Event(), queue.Queue()
-    folder = tk.StringVar(value="Choose the project you want to work on")
-    status = tk.StringVar(value="Your goal and inference mailbox stay in the selected project.")
+
+    target = tk.StringVar(
+        value="Choose the AI/agent project whose inference calls you want to intercept."
+    )
+    status = tk.StringVar(value="No target selected.")
+    counts = tk.StringVar(value="Waiting inference: 0    Answered inference: 0")
+    bridge_state = tk.StringVar(value="Local API bridge: STOPPED")
+    relay_state = tk.StringVar(value="GitHub transport: not linked to this target")
+
     frame = ttk.Frame(window, padding=16)
     frame.pack(fill="both", expand=True)
+
     ttk.Label(frame, text="Interception", font=("Segoe UI", 20, "bold")).pack(anchor="w")
-    ttk.Label(frame, textvariable=folder, wraplength=840).pack(anchor="w", pady=6)
+    ttk.Label(
+        frame,
+        text="Intercept model calls → route inference through ChatGPT → return the validated answer.",
+        wraplength=880,
+    ).pack(anchor="w", pady=(2, 8))
+    ttk.Label(frame, textvariable=target, wraplength=880).pack(anchor="w", pady=(0, 8))
 
     def guarded(fn):
         def invoke():
@@ -49,82 +62,121 @@ def launch(project=None):
 
     def bridge():
         if state["bridge"] is None:
-            raise ValueError("Choose a project first")
+            raise ValueError("Choose a target project first")
         return state["bridge"]
+
+    def render_assessment(result):
+        assessment.delete("1.0", "end")
+        assessment.insert("end", f"Target: {result.get('project', 'unknown')}\n")
+        assessment.insert(
+            "end",
+            f"Scanned: {result.get('files_scanned', 0)} files    "
+            f"Languages: {', '.join(result.get('source_languages', [])) or 'not detected'}\n",
+        )
+        assessment.insert(
+            "end",
+            f"Frameworks: {', '.join(result.get('frameworks', [])) or 'not detected'}\n"
+            f"Providers: {', '.join(result.get('providers', [])) or 'not detected'}\n"
+            f"Recommended interception: {result.get('recommended_interception', 'unknown')}\n\n",
+        )
+        surfaces = result.get("inference_surfaces", [])
+        if surfaces:
+            assessment.insert("end", "Detected inference surfaces:\n")
+            for index, surface in enumerate(surfaces, 1):
+                assessment.insert(
+                    "end",
+                    f"  {index}. {surface.get('invocation_protocol', 'UNKNOWN')} "
+                    f"→ {surface.get('recommended_interception', 'explicit adapter')} "
+                    f"[{surface.get('owner', 'UNKNOWN')}]\n",
+                )
+        else:
+            assessment.insert(
+                "end",
+                "No supported inference surface was established by static assessment. "
+                "This does not prove that the project has no inference calls.\n",
+            )
+        blockers = result.get("required_changes", [])
+        if blockers:
+            assessment.insert("end", "\nCurrent boundaries / proof still required:\n")
+            for item in blockers:
+                assessment.insert("end", f"  • {item}\n")
+
+    def refresh_relay_label():
+        current = bridge()
+        path = current.home / "github-relay.json"
+        if not path.exists():
+            relay_state.set("GitHub transport: not linked to this target")
+            return
+        cfg = loads(path.read_text(encoding="utf-8"))
+        request_branch = cfg.get("request_branch", cfg.get("branch", "?"))
+        return_branch = cfg.get("return_branch", request_branch)
+        relay_state.set(
+            f"GitHub transport: {cfg.get('repository', '?')}  "
+            f"PR #{cfg.get('pull_request_number', '?')}  "
+            f"requests={request_branch}  returns={return_branch}"
+        )
 
     def select(path=None):
         if state["server"] or state["worker"]:
-            raise ValueError("Open another window for another project, or close this one first.")
-        selected = path or filedialog.askdirectory(title="Choose this project's folder")
+            raise ValueError("Stop the active bridge/test before switching targets.")
+        selected = path or filedialog.askdirectory(title="Choose target AI/agent project")
         if not selected:
             return
         result = install(selected)
         state["bridge"] = Bridge(selected)
-        folder.set(str(state["bridge"].root))
-        saved = brief.load(state["bridge"]) or {}
-        state["revision"] = saved.get("revision", 0)
-        for name, field in fields.items():
-            field.delete("1.0", "end")
-            field.insert("1.0", saved.get(name, ""))
-        status.set("Project ready. Describe the goal, or open Inference to test the connection.")
-        report.delete("1.0", "end")
-        report.insert("end", "Assessment: " + result["recommended_interception"] + "\n")
-        report.insert("end", "\n".join(result["required_changes"]))
+        state["assessment"] = result
+        target.set(str(state["bridge"].root))
+        render_assessment(result)
+        refresh_relay_label()
+        status.set(
+            "Target assessed. Start the API bridge or review the detected inference surface."
+        )
 
-    ttk.Button(frame, text="Choose project folder", command=guarded(select)).pack(fill="x")
+    ttk.Button(frame, text="Choose target project", command=guarded(select)).pack(fill="x")
+
     tabs = ttk.Notebook(frame)
     tabs.pack(fill="both", expand=True, pady=10)
-    goals, inference = ttk.Frame(tabs, padding=12), ttk.Frame(tabs, padding=12)
-    tabs.add(goals, text="Goal and procedure")
+
+    routing = ttk.Frame(tabs, padding=12)
+    inference = ttk.Frame(tabs, padding=12)
+    diagnostics = ttk.Frame(tabs, padding=12)
+    tabs.add(routing, text="Target & routing")
     tabs.add(inference, text="Inference")
-    ttk.Label(
-        goals,
-        text="Use your own words. The chat handoff includes the working procedure.",
-        wraplength=800,
-    ).pack(anchor="w", pady=4)
-    fields = {}
-    for name, label, height in [
-        ("goal", "What do you want finished or improved?", 3),
-        ("guidelines", "Guidelines — how you want the work approached", 2),
-        ("constraints", "Constraints — limits and things that must not change", 2),
-        ("done_when", "Done means… (optional; the assistant will help establish this)", 2),
-    ]:
-        ttk.Label(goals, text=label).pack(anchor="w", pady=(8, 2))
-        field = tk.Text(goals, height=height, wrap="word", undo=True)
-        field.pack(fill="x")
-        fields[name] = field
+    tabs.add(diagnostics, text="Diagnostics")
 
-    def save_goal():
-        body = brief.save(
-            bridge(),
-            expected_revision=state["revision"],
-            **{name: field.get("1.0", "end-1c") for name, field in fields.items()},
-        )
-        state["revision"] = body["revision"]
-        status.set(f"Goal saved as revision {body['revision']}. No project execution started.")
+    ttk.Label(routing, textvariable=bridge_state).pack(anchor="w", pady=(0, 4))
+    ttk.Label(routing, textvariable=relay_state, wraplength=850).pack(anchor="w", pady=(0, 10))
 
-    def copy_text(text):
+    def reassess():
+        current = bridge()
+        result = install(current.root)
+        state["assessment"] = result
+        render_assessment(result)
+        refresh_relay_label()
+        status.set("Target re-assessed.")
+
+    def copy_connection():
+        current = bridge()
+        path = current.home / "connection.json"
+        if not path.exists():
+            raise ValueError("Connection settings do not exist yet")
         window.clipboard_clear()
-        window.clipboard_append(text)
+        window.clipboard_append(path.read_text(encoding="utf-8"))
         window.update_idletasks()
+        status.set("Copied local API connection settings.")
 
-    def copy_handoff():
-        save_goal()
-        copy_text(brief.handoff(bridge()))
-        status.set(
-            "Paste into the project's chat with its repository connected. Keep this window open."
-        )
-
-    ttk.Button(goals, text="Save goal", command=guarded(save_goal)).pack(fill="x", pady=(12, 3))
+    ttk.Button(routing, text="Re-assess target", command=guarded(reassess)).pack(fill="x", pady=3)
     ttk.Button(
-        goals, text="Copy goal + working procedure for chat", command=guarded(copy_handoff)
+        routing, text="Copy local API connection settings", command=guarded(copy_connection)
     ).pack(fill="x", pady=3)
-    ttk.Label(
-        goals,
-        text="Chat performs authorized project work. This panel preserves your brief "
-        "and transports inference; it does not itself execute arbitrary projects.",
-        wraplength=800,
-    ).pack(anchor="w", pady=8)
+    ttk.Button(
+        routing,
+        text="Open this target's Interception state",
+        command=guarded(lambda: open_folder(bridge().home)),
+    ).pack(fill="x", pady=3)
+
+    assessment = tk.Text(routing, height=18, wrap="word")
+    assessment.pack(fill="both", expand=True, pady=(10, 0))
 
     def start():
         current = bridge()
@@ -134,25 +186,31 @@ def launch(project=None):
         server = BridgeServer(current, port=config["port"], token=config["token"])
         state["server"] = server
         threading.Thread(target=server.serve_forever, daemon=True).start()
-        status.set(f"API bridge running at 127.0.0.1:{config['port']}.")
+        bridge_state.set(f"Local API bridge: RUNNING at 127.0.0.1:{config['port']}")
+        status.set("Interception is listening for inference calls from this target.")
+
+    def copy_text(text):
+        window.clipboard_clear()
+        window.clipboard_append(text)
+        window.update_idletasks()
 
     def export():
         current = bridge()
         current.ingest()
         path = filedialog.asksaveasfilename(
-            title="Save requests for ChatGPT",
+            title="Save pending inference batch",
             initialfile="INFERENCE_BATCH.md",
             defaultextension=".md",
         )
         if path:
             current.export_batch(path)
-            status.set("Upload the batch to ChatGPT: Fulfill these inference requests.")
+            status.set("Saved pending inference batch.")
 
     def copy_batch():
         current = bridge()
         current.ingest()
         copy_text(current.export_batch().read_text(encoding="utf-8"))
-        status.set("Paste into ChatGPT. Ask it to return the complete RETURN JSON envelope.")
+        status.set("Copied pending inference requests.")
 
     def receive():
         current = bridge()
@@ -162,7 +220,7 @@ def launch(project=None):
         for path in paths:
             import_return(current, path)
         if paths:
-            status.set(f"Validated {len(paths)} answer(s). Waiting callers can continue.")
+            status.set(f"Validated {len(paths)} RETURN file(s). Waiting callers can continue.")
 
     def paste_answer():
         current = bridge()
@@ -173,16 +231,38 @@ def launch(project=None):
             raise ValueError("RETURN exceeds 8 MiB")
         returned = loads(text)
         if not isinstance(returned, dict) or not isinstance(returned.get("request_id"), str):
-            raise ValueError("Copy the full RETURN JSON, including its request_id")
+            raise ValueError("Copy the full RETURN JSON, including request_id")
         rid = returned["request_id"]
         validate_return(current.get(rid)["packet"], returned)
         current.write_return(rid, returned["response"])
-        status.set(f"Validated answer for {rid}. Waiting caller can continue.")
+        status.set(f"Validated RETURN for {rid}. Waiting caller can continue.")
+
+    ttk.Label(
+        inference,
+        text="Runtime controls. External agents should call the local OpenAI-compatible endpoint.",
+        wraplength=850,
+    ).pack(anchor="w", pady=(0, 8))
+    ttk.Button(inference, text="Start local API bridge", command=guarded(start)).pack(
+        fill="x", pady=3
+    )
+    ttk.Button(inference, text="Copy pending inference requests", command=guarded(copy_batch)).pack(
+        fill="x", pady=3
+    )
+    ttk.Button(
+        inference, text="Paste RETURN JSON from clipboard", command=guarded(paste_answer)
+    ).pack(fill="x", pady=3)
+    ttk.Button(inference, text="Save pending batch as file", command=guarded(export)).pack(
+        fill="x", pady=3
+    )
+    ttk.Button(inference, text="Import RETURN files", command=guarded(receive)).pack(
+        fill="x", pady=3
+    )
+    ttk.Label(inference, textvariable=counts).pack(anchor="w", pady=10)
 
     def proof():
         current = bridge()
         if state["worker"]:
-            raise ValueError("The bundled test is already waiting; fulfill its request first.")
+            raise ValueError("Diagnostic proof is already waiting for a RETURN.")
 
         def work():
             try:
@@ -190,8 +270,8 @@ def launch(project=None):
                 events.put(
                     (
                         "done",
-                        f"RESUMED: Prompt Evolver returned {receipt['score']}. "
-                        "Local inference proof saved; project completion is separate.",
+                        f"DIAGNOSTIC PASSED: upstream Prompt Evolver caller resumed with "
+                        f"score {receipt['score']}.",
                     )
                 )
             except Exception as exc:
@@ -200,29 +280,28 @@ def launch(project=None):
         state["worker"] = threading.Thread(target=work, daemon=True)
         state["worker"].start()
         status.set(
-            "Prompt Evolver is waiting. Copy its request to chat, then paste the RETURN JSON."
+            "Diagnostic caller is waiting. Fulfill its inference request, then provide RETURN."
         )
 
     ttk.Label(
-        inference,
-        text="First proof: run test → copy request to chat → paste RETURN → caller resumes.",
-        wraplength=800,
-    ).pack(anchor="w", pady=8)
-    for label, fn in [
-        ("1. Run bundled Prompt Evolver test", proof),
-        ("2. Copy waiting requests for ChatGPT", copy_batch),
-        ("3. Paste RETURN JSON from clipboard", paste_answer),
-        ("Save request batch as a file", export),
-        ("Import RETURN files", receive),
-        ("Start API bridge (for connected external agents)", start),
-        ("Open this project's CATCH / RETURN folders", lambda: open_folder(bridge().home)),
-    ]:
-        ttk.Button(inference, text=label, command=guarded(fn)).pack(fill="x", pady=3)
-    count = tk.StringVar()
-    ttk.Label(inference, textvariable=count).pack(anchor="w", pady=8)
-    report = tk.Text(inference, height=8, wrap="word")
-    report.pack(fill="both", expand=True)
-    ttk.Label(frame, textvariable=status, wraplength=840).pack(anchor="w", pady=6)
+        diagnostics,
+        text=(
+            "Bundled Prompt Evolver is only a transport diagnostic. It is not part of "
+            "Interception's product scope."
+        ),
+        wraplength=850,
+    ).pack(anchor="w", pady=(0, 10))
+    ttk.Button(diagnostics, text="Run intercepted-call proof", command=guarded(proof)).pack(
+        fill="x", pady=3
+    )
+    ttk.Button(diagnostics, text="Copy diagnostic request", command=guarded(copy_batch)).pack(
+        fill="x", pady=3
+    )
+    ttk.Button(diagnostics, text="Paste diagnostic RETURN", command=guarded(paste_answer)).pack(
+        fill="x", pady=3
+    )
+
+    ttk.Label(frame, textvariable=status, wraplength=880).pack(anchor="w", pady=6)
 
     def refresh():
         try:
@@ -238,8 +317,9 @@ def launch(project=None):
             if state["bridge"]:
                 rows = state["bridge"].requests()
                 pending = [row for row in rows if row["state"] == "WAITING_FOR_INFERENCE"]
-                count.set(
-                    f"Waiting inference: {len(pending)}    Answered inference: {len(rows) - len(pending)}"
+                counts.set(
+                    f"Waiting inference: {len(pending)}    "
+                    f"Answered inference: {len(rows) - len(pending)}"
                 )
         except Exception as exc:
             status.set(f"Mailbox status unavailable: {exc}")
@@ -247,9 +327,8 @@ def launch(project=None):
 
     def close():
         if state["worker"] and not messagebox.askyesno(
-            "Close waiting test?",
-            "Closing stops the live test caller. Its request stays saved, "
-            "but this caller cannot resume after closing. Close anyway?",
+            "Close waiting diagnostic?",
+            "Closing stops this live diagnostic caller. Its durable request remains saved. Close anyway?",
         ):
             return
         stop.set()

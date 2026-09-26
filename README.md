@@ -9,16 +9,17 @@ The core makes no inference API calls.
 ## Start on Windows
 
 1. Download this repository (GitHub **Code → Download ZIP**) and extract it to a local drive.
-2. Double-click **Start-Interception.cmd**. The hardened bootstrap deliberately selects a clean
-   64-bit python.org-style CPython 3.13 or 3.11, creates/repairs the repository-local `.venv`,
-   strips inherited Conda/NVIDIA/CUDA/Python/pip contamination, forces isolated PyPI dependency
-   resolution, verifies Tcl/Tk and the bridge, and then opens the desktop.
-3. Choose your project's folder. In **Goal and procedure**, describe what you want finished,
-   with guidelines and constraints. **Copy goal + working procedure for chat** prepares the handoff.
-4. In **Inference**, click **Run bundled Prompt Evolver test**, then **Copy waiting requests for ChatGPT**.
-5. Paste into ChatGPT and ask it to fulfill the request. Copy its complete RETURN JSON.
-6. Click **Paste RETURN JSON from clipboard**. The same waiting caller resumes and the panel
-   reports **RESUMED**. File export/import is also available.
+2. Double-click **Start-Interception.cmd**. The hardened bootstrap selects a clean 64-bit
+   python.org-style CPython 3.13 or 3.11, creates/reuses the repository-local `.venv`, prefers the
+   bundled offline wheelhouse, and otherwise uses explicit PyPI without changing global
+   Python/Conda/CUDA/NVIDIA state.
+3. Click **Choose target project** and select the AI/agent project whose inference calls you want
+   Interception to service.
+4. Review **Target & routing**, then start the local OpenAI-compatible endpoint from **Inference**.
+5. Point the target's supported inference client at the generated local connection settings, or use
+   an explicit adapter.
+6. The preferred cloud path is private GitHub → ChatGPT Work → separate GitHub RETURN branch.
+   See [START_HERE.md](START_HERE.md) and [plugin/README.md](plugin/README.md).
 
 See [START_HERE.md](START_HERE.md) for the exact procedure and current completion boundary.
 The bundled proof does not require Ollama, LiteLLM, a provider API key, or a separate target download.
@@ -38,8 +39,9 @@ changes global Python, Conda, CUDA or NVIDIA installations. Failures are written
 
 ## What works
 
-- Versioned project-local goal/guidelines/constraints brief and a conversational execution handoff.
-- Explicit per-instance Prompt Evolver `LLMClient.complete` adapter and bundled live judging proof.
+- Target-focused desktop control panel for inference-surface assessment and routing.
+- Explicit per-instance Prompt Evolver `LLMClient.complete` adapter retained only as a bundled live
+  transport diagnostic.
 - Static project assessment v3: explicit `inference_surfaces[]` for multiple simultaneous
   project/framework/host/external-client boundaries; Python AST evidence, Jupyter code-cell
   inspection, and bounded Python/JS/TS/Go/C#/shell/PowerShell source discovery. Findings are
@@ -208,7 +210,7 @@ with unique IDs and JSON-encoded arguments. The original agent executes those to
 | Full context/caller identity | Captures request plus explicitly supplied metadata/files; cannot infer hidden process memory |
 | Any arbitrary project, seamless adaptation | Not established; assessment identifies intervention points, not universal correctness |
 | ChatGPT watching Windows folders | Not available from an ordinary remote chat; use batch transfer or a separately configured relay |
-| Notifications | See the separate plugin branch for the GitHub event-triggered relay design |
+| Cloud transport | Private GitHub request PR → ChatGPT Work → separate private RETURN branch |
 
 No network interception, TLS interception, hidden paid-provider fallback, or global SDK monkeypatching.
 The server binds to loopback only and rejects browser Origin requests. This is a trusted local-user

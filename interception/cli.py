@@ -76,6 +76,7 @@ def main(argv=None):
         if name == "relay-configure":
             command.add_argument("repository")
             command.add_argument("pr_number", type=int)
+            command.add_argument("--return-branch", default="interception-returns")
         if name == "relay-watch":
             command.add_argument("--interval", type=int, default=30)
     for name in ("run-node", "resume-node"):
@@ -118,7 +119,15 @@ def main(argv=None):
 
             if args.command == "relay-configure":
                 print(
-                    json.dumps(configure(args.project, args.repository, args.pr_number), indent=2)
+                    json.dumps(
+                        configure(
+                            args.project,
+                            args.repository,
+                            args.pr_number,
+                            return_branch=args.return_branch,
+                        ),
+                        indent=2,
+                    )
                 )
             else:
                 relay = GitHubRelay(args.project)

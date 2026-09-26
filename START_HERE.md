@@ -1,78 +1,81 @@
 # Start here
 
-## Work from a simple goal
+## What Interception does
 
-1. Extract the ZIP to a local folder. Double-click **Start-Interception.cmd**.
-   The existing launcher selects CPython 3.13 or 3.11 and prepares `.venv` for you.
-   First setup needs internet access for Python packages; no paid inference service is required.
-2. Click **Choose project folder**. Select the actual project you want improved.
-3. Enter your goal in your own words. Add guidelines and constraints if you have them.
-   **Done means** is optional: the assistant must establish observable acceptance criteria.
-4. Click **Copy goal + working procedure for chat**. Paste into your project chat with its
-   repository connected or files attached. Keep this window open while copying/pasting.
-5. The assistant follows the included procedure: recover current authority → establish scope
-   and acceptance → choose bounded work → execute → verify → checkpoint → continue.
+Interception is an inference router. It catches a supported model call from an AI/agent project,
+stores the exact request durably, routes that request through the configured ChatGPT Work transport,
+validates the RETURN, and releases the original caller.
 
-You do not need to supply implementation vocabulary or a perfect prompt. Missing decisions
-should be retrieved first; only material unresolved choices should come back to you.
-Your brief is revisioned in this project's SQLite ledger. It is not an instruction to merge,
-publish, spend money, or override an earlier hold. The assistant must reconcile those boundaries.
+It does **not** plan projects, manage goals, schedule project work, or replace upstream systems such
+as Panoptes.
 
-## Prove the inference connection
+## Start on Windows
 
-1. Open the **Inference** tab and click **Run bundled Prompt Evolver test**.
-2. Click **Copy waiting requests for ChatGPT**, then paste into chat.
-3. ChatGPT returns a JSON envelope. Copy the whole envelope, including `request_id`.
-4. Click **Paste RETURN JSON from clipboard**.
-5. The waiting upstream judging method returns. The panel displays **RESUMED** and stores
-   a receipt under `.inference_bridge/proofs/` in the selected project.
+1. Extract the Interception ZIP to a local folder.
+2. Double-click **Start-Interception.cmd**.
+   The launcher selects clean 64-bit CPython 3.13 or 3.11 and prepares the repository-local
+   `.venv` without changing global Python/Conda/CUDA/NVIDIA state.
+3. Click **Choose target project** and select the AI/agent project whose inference calls you want
+   Interception to service.
+4. In **Target & routing**, review the detected framework/protocol and copy the generated local API
+   connection settings when needed.
+5. In **Inference**, start the local API bridge.
+6. Point the target's supported inference client at the generated OpenAI-compatible local endpoint,
+   or use an explicit target adapter.
 
-The test deliberately asks a tiny arithmetic question so a successful run proves transport
-and same-process continuation, without implying project quality or full evolutionary optimization.
-You can use **Save request batch as a file** and **Import RETURN files** instead of clipboard.
-Malformed or other-project envelopes are rejected. Failed proof answers require a new test.
+## GitHub → ChatGPT Work transport
 
-Keep the test window open while waiting. Closing it retains the request but loses that live
-Python caller. Restarting the proof starts a new logical call. Existing explicitly restart-safe
-nodes have a separate durable re-entry mechanism; arbitrary process restoration is not promised.
+The preferred cloud transport is GitHub-only:
 
-## What this delivery finishes
-
-- Reconciles the existing core/assessor and relay/launcher branches in one review branch.
-- Supplies a bundled real target, explicit adapter, project briefs and chat handoff.
-- Provides a Windows launcher using the existing clean-Python conventions.
-- Exercises local CATCH → manual answer → validated RETURN → the same waiting caller resumes.
-
-## What still needs connection
-
-Automatic remote wake-up requires a selected private GitHub mailbox, local GitHub authentication
-and an enabled GitHub commit-update Work trigger. GitHub is the only MVP wake path; no Gmail or SMTP
-configuration is required. Those account-specific connections are not configured by the ZIP.
-Never put live inference packets
-in the public Interception source repository. Setup remains in `plugin/README.md`.
-
-Chat currently performs project work. This desktop does not automatically edit arbitrary projects,
-schedule recurring work or guarantee completion from a goal. Panoptes remains a separate planning
-and continuation project. Its scheduler/executor and GEPA adoption are not implemented by this patch.
-Do not count an answered inference call as a finished project or an independently accepted integration.
-
-## Adapter for the full Prompt Evolver checkout
-
-In the Python process that creates the project's `LLMClient`, explicitly opt in immediately after
-constructing that client, before handing it to mutation/evaluation/validation components:
-
-```python
-from interception import Bridge
-from interception.adapters import connect_prompt_evolver
-
-# llm is the project's existing LLMClient instance.
-connect_prompt_evolver(llm, Bridge(project_folder), run_id=run_id)
+```text
+target inference call
+      ↓
+Interception local SQLite + CATCH
+      ↓
+private GitHub request branch / permanent PR
+      ↓ PR commit update
+ChatGPT Work
+      ↓
+private GitHub return branch
+      ↓
+Interception validates RETURN
+      ↓
+original caller resumes
 ```
 
-Only that instance changes. Its inherited `complete_json` and `judge_score` continue using
-`complete`; there is no global provider patch or paid fallback. Requested model/settings are
-preserved in CATCH. The returned `LLMResponse.model` is `manual/unspecified` and usage is empty.
-Workflow-level deadlines and process lifetime remain the host application's responsibility.
+Request and response traffic use separate GitHub branches so a Work RETURN commit does not wake the
+same Work trigger again.
+
+Current temporary private transport:
+
+- repository: `zhenrez/chat-docs-versions-histories`
+- request branch: `interception-mailbox`
+- permanent request PR: **#2**
+- return branch: `interception-returns`
+
+The transport repository is temporary infrastructure. A dedicated private Interception mailbox repo
+is the cleaner long-term destination.
+
+## Diagnostics
+
+The **Diagnostics** tab contains the bundled Prompt Evolver proof. It is only a transport fixture:
+
+1. Click **Run intercepted-call proof**.
+2. Copy the waiting inference request.
+3. Fulfill it through ChatGPT/Work or a manual RETURN during diagnosis.
+4. Paste/import the RETURN.
+5. The waiting upstream caller must resume.
+
+A successful proof establishes CATCH → inference → validated RETURN → caller continuation. It does
+not establish universal framework compatibility.
+
+## Compatibility boundary
+
+The OpenAI Chat Completions path is implemented. Static assessment can detect several framework and
+provider candidates, but native Anthropic Messages, OpenAI Responses, Gemini-native calls and other
+protocols require explicit adapters and target-specific proof.
+
+"Any arbitrary AI project" is the compatibility target, not a blanket current claim.
 
 ## Verification for maintainers
 
@@ -84,4 +87,4 @@ python -m ruff format --check .
 python -m interception proof /path/to/project
 ```
 
-The last command waits for an actual RETURN. It never self-answers.
+The proof command waits for a real RETURN. It never self-answers.
