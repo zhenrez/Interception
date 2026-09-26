@@ -16,6 +16,7 @@ class FakeGitHub:
         self.private = True
         self.files = {}
         self.head = "initial-head"
+        self.return_head = "return-head"
         self.writes = []
         self.trees = {}
         self.commits = {}
@@ -36,6 +37,11 @@ class FakeGitHub:
                     "sha": self.head,
                     "repo": {"full_name": "user/private-mailbox"},
                 },
+            }
+        if method == "GET" and suffix == "/branches/interception-returns":
+            return {
+                "name": "interception-returns",
+                "commit": {"sha": self.return_head},
             }
         if method == "GET" and suffix.startswith("/contents/"):
             path = unquote(suffix[len("/contents/") :].split("?ref=")[0])
@@ -158,4 +164,13 @@ def test_automation_exact_pr_scope_and_no_schedule(tmp_path):
     assert params["pull_request_number"] == 7
     assert params["enable_commit_updates"] is True
     assert params["enable_comments"] is False
-    assert "response-only commits must not create loops" in spec["prompt"]
+    assert "branch interception-returns" in spec["prompt"]
+    assert "never write RETURNs to the request branch" in spec["prompt"]
+
+
+def test_v2_config_separates_request_and_return_branches(tmp_path):
+    _, _, config = relay(tmp_path)
+    assert config["version"] == 2
+    assert config["request_branch"] == "mailbox"
+    assert config["return_branch"] == "interception-returns"
+    assert "branch" not in config
