@@ -32,7 +32,9 @@ def launch(project=None):
     state = {"bridge": None, "server": None, "worker": None, "assessment": None}
     stop, events = threading.Event(), queue.Queue()
 
-    target = tk.StringVar(value="Choose the AI/agent project whose inference calls you want to intercept.")
+    target = tk.StringVar(
+        value="Choose the AI/agent project whose inference calls you want to intercept."
+    )
     status = tk.StringVar(value="No target selected.")
     counts = tk.StringVar(value="Waiting inference: 0    Answered inference: 0")
     bridge_state = tk.StringVar(value="Local API bridge: STOPPED")
@@ -55,6 +57,7 @@ def launch(project=None):
                 return fn()
             except Exception as exc:
                 messagebox.showerror("Interception", str(exc))
+
         return invoke
 
     def bridge():
@@ -125,7 +128,9 @@ def launch(project=None):
         target.set(str(state["bridge"].root))
         render_assessment(result)
         refresh_relay_label()
-        status.set("Target assessed. Start the API bridge or review the detected inference surface.")
+        status.set(
+            "Target assessed. Start the API bridge or review the detected inference surface."
+        )
 
     ttk.Button(frame, text="Choose target project", command=guarded(select)).pack(fill="x")
 
@@ -240,9 +245,9 @@ def launch(project=None):
     ttk.Button(inference, text="Start local API bridge", command=guarded(start)).pack(
         fill="x", pady=3
     )
-    ttk.Button(
-        inference, text="Copy pending inference requests", command=guarded(copy_batch)
-    ).pack(fill="x", pady=3)
+    ttk.Button(inference, text="Copy pending inference requests", command=guarded(copy_batch)).pack(
+        fill="x", pady=3
+    )
     ttk.Button(
         inference, text="Paste RETURN JSON from clipboard", command=guarded(paste_answer)
     ).pack(fill="x", pady=3)
@@ -274,7 +279,9 @@ def launch(project=None):
 
         state["worker"] = threading.Thread(target=work, daemon=True)
         state["worker"].start()
-        status.set("Diagnostic caller is waiting. Fulfill its inference request, then provide RETURN.")
+        status.set(
+            "Diagnostic caller is waiting. Fulfill its inference request, then provide RETURN."
+        )
 
     ttk.Label(
         diagnostics,
@@ -284,15 +291,15 @@ def launch(project=None):
         ),
         wraplength=850,
     ).pack(anchor="w", pady=(0, 10))
-    ttk.Button(
-        diagnostics, text="Run intercepted-call proof", command=guarded(proof)
-    ).pack(fill="x", pady=3)
-    ttk.Button(
-        diagnostics, text="Copy diagnostic request", command=guarded(copy_batch)
-    ).pack(fill="x", pady=3)
-    ttk.Button(
-        diagnostics, text="Paste diagnostic RETURN", command=guarded(paste_answer)
-    ).pack(fill="x", pady=3)
+    ttk.Button(diagnostics, text="Run intercepted-call proof", command=guarded(proof)).pack(
+        fill="x", pady=3
+    )
+    ttk.Button(diagnostics, text="Copy diagnostic request", command=guarded(copy_batch)).pack(
+        fill="x", pady=3
+    )
+    ttk.Button(diagnostics, text="Paste diagnostic RETURN", command=guarded(paste_answer)).pack(
+        fill="x", pady=3
+    )
 
     ttk.Label(frame, textvariable=status, wraplength=880).pack(anchor="w", pady=6)
 
