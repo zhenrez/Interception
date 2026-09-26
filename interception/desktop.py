@@ -1,13 +1,11 @@
 """Local control panel for target selection and inference routing."""
 
-import json
 import os
 import queue
 import subprocess
 import sys
 import threading
 import tkinter as tk
-from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
 from .bridge import Bridge
