@@ -5,6 +5,7 @@ on:
     branches:
       - feat/chatgpt-plugin-mailbox
       - feat/operational-inference
+      - sandbox/ui-scope-correction
   workflow_dispatch:
 
 permissions:
