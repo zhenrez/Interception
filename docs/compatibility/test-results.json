@@ -1,0 +1,351 @@
+{
+  "date_utc": "2026-09-27",
+  "platform": "Linux",
+  "python": "3.12.14",
+  "tests": 56,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "seconds": 8.231,
+  "upstream_code_modified": false,
+  "transport": "real loopback HTTP; test socket connections restricted to loopback",
+  "inference_answers": "controlled RETURN fixtures; no paid model calls or live notification flow",
+  "cases": [
+    {
+      "name": "test_zelos_planner_catch_hold_return_parse",
+      "class": "tests.integration.test_upstream_paths",
+      "seconds": 0.517,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_zelos_native_anthropic_is_not_compatible",
+      "class": "tests.integration.test_upstream_paths",
+      "seconds": 0.505,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_openjarvis_generate[False]",
+      "class": "tests.integration.test_upstream_paths",
+      "seconds": 0.574,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_openjarvis_generate[True]",
+      "class": "tests.integration.test_upstream_paths",
+      "seconds": 0.506,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_openjarvis_async_stream",
+      "class": "tests.integration.test_upstream_paths",
+      "seconds": 0.507,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_openjarvis_caller_timeout_preserves_request_but_not_workflow",
+      "class": "tests.integration.test_upstream_paths",
+      "seconds": 0.507,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_assessment_evidence_not_false_certainty",
+      "class": "tests.test_assess",
+      "seconds": 0.003,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_install_idempotent_and_no_source_rewrite",
+      "class": "tests.test_assess",
+      "seconds": 0.004,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_context_boundaries",
+      "class": "tests.test_assess",
+      "seconds": 0.001,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_mentions_and_completion_helpers_do_not_establish_inference",
+      "class": "tests.test_assess",
+      "seconds": 0.001,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_boundaries_across_runtime_types[auto-loop.sh-claude -p \"$prompt\"\\n-cli_adapter_required]",
+      "class": "tests.test_assess",
+      "seconds": 0.001,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_boundaries_across_runtime_types[driver.ps1-codex exec \"do task\"\\n-cli_adapter_required]",
+      "class": "tests.test_assess",
+      "seconds": 0.001,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_boundaries_across_runtime_types[provider.ts-groq.chat.completions.create({model: \"manual\"});-openai_compatible_proxy_candidate]",
+      "class": "tests.test_assess",
+      "seconds": 0.001,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_boundaries_across_runtime_types[provider.py-urlopen(Request(f\"{base}/chat/completions\", data=body))-openai_compatible_proxy_candidate]",
+      "class": "tests.test_assess",
+      "seconds": 0.001,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_boundaries_across_runtime_types[provider.ts-ai.models.generateContent({model: \"gemini\"});-protocol_adapter_required]",
+      "class": "tests.test_assess",
+      "seconds": 0.001,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_boundaries_across_runtime_types[provider.py-from litellm import completion as generate\\ngenerate(model=\"x\")-openai_compatible_proxy_candidate]",
+      "class": "tests.test_assess",
+      "seconds": 0.001,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_example_provider_does_not_classify_project_as_proxy_compatible",
+      "class": "tests.test_assess",
+      "seconds": 0.001,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_application_message_routes_are_not_native_model_protocols",
+      "class": "tests.test_assess",
+      "seconds": 0.001,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_mixed_routes_require_explicit_selection",
+      "class": "tests.test_assess",
+      "seconds": 0.001,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_restart_and_missing_catch_recovery",
+      "class": "tests.test_bridge",
+      "seconds": 0.009,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_partial_invalid_then_corrected_return",
+      "class": "tests.test_bridge",
+      "seconds": 0.007,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_completed_immutable_and_duplicate_idempotent",
+      "class": "tests.test_bridge",
+      "seconds": 0.004,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_concurrent_stable_key_and_distinct_unkeyed_requests",
+      "class": "tests.test_bridge",
+      "seconds": 0.02,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_cooperative_suspend_resume",
+      "class": "tests.test_bridge",
+      "seconds": 0.008,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_process_exit_and_reentry",
+      "class": "tests.test_bridge",
+      "seconds": 0.173,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_process_killed_after_ledger_commit_before_publication",
+      "class": "tests.test_bridge",
+      "seconds": 0.071,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_schema_and_tool_validation",
+      "class": "tests.test_bridge",
+      "seconds": 0.029,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_unsupported_requests_not_queued[n-2]",
+      "class": "tests.test_bridge",
+      "seconds": 0.002,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_unsupported_requests_not_queued[stream-yes]",
+      "class": "tests.test_bridge",
+      "seconds": 0.002,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_unsupported_requests_not_queued[messages-value2]",
+      "class": "tests.test_bridge",
+      "seconds": 0.002,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_unsupported_requests_not_queued[tools-value3]",
+      "class": "tests.test_bridge",
+      "seconds": 0.002,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_unsupported_requests_not_queued[response_format-value4]",
+      "class": "tests.test_bridge",
+      "seconds": 0.002,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_unsupported_requests_not_queued[response_format-value5]",
+      "class": "tests.test_bridge",
+      "seconds": 0.002,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_batch_self_contained_and_original_preserved",
+      "class": "tests.test_bridge",
+      "seconds": 0.003,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_nonstandard_json_rejected",
+      "class": "tests.test_bridge",
+      "seconds": 0.0,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_unknown_return_and_symlink_rejected",
+      "class": "tests.test_bridge",
+      "seconds": 0.003,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_malformed_return_does_not_block_other_requests",
+      "class": "tests.test_bridge",
+      "seconds": 0.006,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_import_conflict_is_reported",
+      "class": "tests.test_bridge",
+      "seconds": 0.005,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_multiple_bridge_instances_share_key",
+      "class": "tests.test_bridge",
+      "seconds": 0.01,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_repair_non_utf8_catch",
+      "class": "tests.test_bridge",
+      "seconds": 0.004,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_supervised_node_auto_resumes_and_survives_supervisor_kill",
+      "class": "tests.test_bridge",
+      "seconds": 0.213,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_public_repo_refused_before_payload_writes",
+      "class": "tests.test_github_relay",
+      "seconds": 0.014,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_batched_publish_idempotency_and_validated_return",
+      "class": "tests.test_github_relay",
+      "seconds": 0.009,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_recheck_privacy_and_remote_mutation",
+      "class": "tests.test_github_relay",
+      "seconds": 0.004,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_remote_invalid_return_keeps_request_pending",
+      "class": "tests.test_github_relay",
+      "seconds": 0.004,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_failed_remote_commit_retry_keeps_local_request",
+      "class": "tests.test_github_relay",
+      "seconds": 0.005,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_automation_exact_pr_scope_and_no_schedule",
+      "class": "tests.test_github_relay",
+      "seconds": 0.002,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_gmail_wakeup_deduplicates_and_contains_no_payload",
+      "class": "tests.test_github_relay",
+      "seconds": 0.018,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_gmail_failed_send_retries",
+      "class": "tests.test_github_relay",
+      "seconds": 0.005,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_gmail_task_matches_only_exact_sender_and_mailbox",
+      "class": "tests.test_github_relay",
+      "seconds": 0.003,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_official_sdk_wait_and_resume",
+      "class": "tests.test_server",
+      "seconds": 1.315,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_official_sdk_streaming_tool_calls",
+      "class": "tests.test_server",
+      "seconds": 0.511,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_async_sdk",
+      "class": "tests.test_server",
+      "seconds": 0.511,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_durable_http_submit_status_and_restart",
+      "class": "tests.test_server",
+      "seconds": 1.01,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_rejects_auth_origin_unsupported_and_idempotency_conflict",
+      "class": "tests.test_server",
+      "seconds": 0.511,
+      "outcome": "passed"
+    },
+    {
+      "name": "test_disconnected_client_retains_request_and_releases_worker",
+      "class": "tests.test_server",
+      "seconds": 0.505,
+      "outcome": "passed"
+    }
+  ]
+}

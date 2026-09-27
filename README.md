@@ -31,7 +31,10 @@ changes global Python, Conda, CUDA or NVIDIA installations. Failures are written
 
 ## What works
 
-- Static project assessment: provider/framework signals, Python call sites, timeout/streaming/
+See the [23-repository compatibility investigation](docs/compatibility/REPORT.md) for
+real Zelos/OpenJarvis provider tests, source findings, and the limits of automatic adaptation.
+
+- Static project assessment: provider/framework signals, SDK/HTTP/CLI boundary candidates, timeout/streaming/
   checkpoint candidates, with file and line evidence. Findings are candidates, not runtime proofs.
 - Local OpenAI **Chat Completions** endpoint; text, JSON answers, JSON Schema, function tool calls,
   synchronous and asynchronous callers, and SSE streaming with waiting heartbeats.

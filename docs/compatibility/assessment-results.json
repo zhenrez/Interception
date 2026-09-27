@@ -1,0 +1,487 @@
+[
+  {
+    "repository": "eugenelim/agent-ready-repo",
+    "sha": "d7aa82b8d0d0e38e3fdf361265f1f8c1d3cbf6d3",
+    "assessment_version": 2,
+    "files_scanned": 1687,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "cli_adapter_required",
+    "inference_boundaries": [
+      "agent_cli"
+    ],
+    "checkpoint_support": "UNVERIFIED",
+    "providers": [
+      "openai"
+    ],
+    "frameworks": [],
+    "skipped": [],
+    "boundary_candidate_count": 2
+  },
+  {
+    "repository": "d4vidc4rson/paralogy-divergent-thinking-tools",
+    "sha": "36edefda0e3fe600cfd297a3bc29d74020a56111",
+    "assessment_version": 2,
+    "files_scanned": 7,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "no_inference_boundary_detected",
+    "inference_boundaries": [],
+    "checkpoint_support": "NOT_DETECTED",
+    "providers": [
+      "anthropic"
+    ],
+    "frameworks": [],
+    "skipped": [],
+    "boundary_candidate_count": 0
+  },
+  {
+    "repository": "nicepkg/auto-company",
+    "sha": "125292073565035455495c8769bca3b27775030d",
+    "assessment_version": 2,
+    "files_scanned": 4,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "cli_adapter_required",
+    "inference_boundaries": [
+      "agent_cli"
+    ],
+    "checkpoint_support": "NOT_DETECTED",
+    "providers": [],
+    "frameworks": [],
+    "skipped": [],
+    "boundary_candidate_count": 1
+  },
+  {
+    "repository": "alrece/loop-engineering",
+    "sha": "cc361d30aa1835b0ddd5d3974459ac95b190e4b0",
+    "assessment_version": 2,
+    "files_scanned": 2,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "cli_adapter_required",
+    "inference_boundaries": [
+      "agent_cli"
+    ],
+    "checkpoint_support": "NOT_DETECTED",
+    "providers": [],
+    "frameworks": [],
+    "skipped": [],
+    "boundary_candidate_count": 2
+  },
+  {
+    "repository": "JSONbored/loopover",
+    "sha": "f665d94a751ed5374216117b469fcd7092003b23",
+    "assessment_version": 2,
+    "files_scanned": 2886,
+    "scan_complete_within_scope": false,
+    "recommended_interception": "mixed_boundaries_require_route_selection",
+    "inference_boundaries": [
+      "native_protocol",
+      "openai_chat"
+    ],
+    "checkpoint_support": "UNVERIFIED",
+    "providers": [
+      "anthropic",
+      "groq",
+      "openai"
+    ],
+    "frameworks": [],
+    "skipped": [
+      {
+        "file": "worker-configuration.d.ts",
+        "reason": "over 512 KiB"
+      },
+      {
+        "file": "apps/loopover-ui/public/openapi.json",
+        "reason": "over 512 KiB"
+      },
+      {
+        "file": "control-plane/worker-configuration.d.ts",
+        "reason": "over 512 KiB"
+      },
+      {
+        "file": "packages/discovery-index/worker-configuration.d.ts",
+        "reason": "over 512 KiB"
+      },
+      {
+        "file": "src/queue/processors.ts",
+        "reason": "over 512 KiB"
+      }
+    ],
+    "boundary_candidate_count": 11
+  },
+  {
+    "repository": "Aiden-Vihaan/Nexus-AI-Productivity_Dashboard",
+    "sha": "175a7236d721b95306127acb55d3a0dd8c54d122",
+    "assessment_version": 2,
+    "files_scanned": 304,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "no_inference_boundary_detected",
+    "inference_boundaries": [],
+    "checkpoint_support": "NOT_DETECTED",
+    "providers": [
+      "anthropic",
+      "openai"
+    ],
+    "frameworks": [],
+    "skipped": [],
+    "boundary_candidate_count": 0
+  },
+  {
+    "repository": "Atri2-code/High-Throughput-Concurrent-Task-Scheduler",
+    "sha": "aec9c1d1d275bb946b9ee8d589a52e2b343b7bf9",
+    "assessment_version": 2,
+    "files_scanned": 3,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "no_inference_boundary_detected",
+    "inference_boundaries": [],
+    "checkpoint_support": "NOT_DETECTED",
+    "providers": [],
+    "frameworks": [],
+    "skipped": [],
+    "boundary_candidate_count": 0
+  },
+  {
+    "repository": "AI-Zelos/zelos",
+    "sha": "ebb2ed4252a92fa463cf8491c88ffc5032455df0",
+    "assessment_version": 2,
+    "files_scanned": 216,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "mixed_boundaries_require_route_selection",
+    "inference_boundaries": [
+      "native_protocol",
+      "openai_chat"
+    ],
+    "checkpoint_support": "NOT_DETECTED",
+    "providers": [
+      "anthropic",
+      "openai"
+    ],
+    "frameworks": [
+      "autogen",
+      "crewai",
+      "langchain",
+      "litellm"
+    ],
+    "skipped": [
+      {
+        "file": "public/search.js",
+        "reason": "over 512 KiB"
+      }
+    ],
+    "boundary_candidate_count": 4
+  },
+  {
+    "repository": "pragya0129/agentForge",
+    "sha": "5c365c3fecea30862db514a61517a078e95d784d",
+    "assessment_version": 2,
+    "files_scanned": 68,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "openai_compatible_proxy_candidate",
+    "inference_boundaries": [
+      "openai_chat"
+    ],
+    "checkpoint_support": "NOT_DETECTED",
+    "providers": [
+      "groq"
+    ],
+    "frameworks": [],
+    "skipped": [],
+    "boundary_candidate_count": 1
+  },
+  {
+    "repository": "JNAbhishek27/LifeOS-AI",
+    "sha": "cef426ceeb983090b966ac0e65c10bb636fa70b9",
+    "assessment_version": 2,
+    "files_scanned": 14,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "protocol_adapter_required",
+    "inference_boundaries": [
+      "native_protocol"
+    ],
+    "checkpoint_support": "NOT_DETECTED",
+    "providers": [
+      "anthropic",
+      "google_genai",
+      "openai"
+    ],
+    "frameworks": [],
+    "skipped": [],
+    "boundary_candidate_count": 3
+  },
+  {
+    "repository": "CCTTOO666/innovation-network",
+    "sha": "c8e9e5af619fccf55b1fcab0376d502276103d96",
+    "assessment_version": 2,
+    "files_scanned": 10,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "openai_compatible_proxy_candidate",
+    "inference_boundaries": [
+      "openai_chat"
+    ],
+    "checkpoint_support": "NOT_DETECTED",
+    "providers": [],
+    "frameworks": [],
+    "skipped": [],
+    "boundary_candidate_count": 1
+  },
+  {
+    "repository": "robzilla1738/supergoal",
+    "sha": "ec2f6eb8eb3304a4ed32f1f18948a6c6198fcd67",
+    "assessment_version": 2,
+    "files_scanned": 9,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "no_inference_boundary_detected",
+    "inference_boundaries": [],
+    "checkpoint_support": "NOT_DETECTED",
+    "providers": [],
+    "frameworks": [],
+    "skipped": [],
+    "boundary_candidate_count": 0
+  },
+  {
+    "repository": "dharanisri2107/Researchmind",
+    "sha": "6a1492abb4c1ffc53c35982343eeaad90b1013c1",
+    "assessment_version": 2,
+    "files_scanned": 0,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "no_inference_boundary_detected",
+    "inference_boundaries": [],
+    "checkpoint_support": "NOT_DETECTED",
+    "providers": [],
+    "frameworks": [],
+    "skipped": [],
+    "boundary_candidate_count": 0
+  },
+  {
+    "repository": "AdieLaine/multi-agent-reasoning",
+    "sha": "4fa5fae1e4ae0fc1d83d44e831e5d3cd5806bda0",
+    "assessment_version": 2,
+    "files_scanned": 4,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "openai_compatible_proxy_candidate",
+    "inference_boundaries": [
+      "openai_chat"
+    ],
+    "checkpoint_support": "NOT_DETECTED",
+    "providers": [
+      "openai"
+    ],
+    "frameworks": [],
+    "skipped": [],
+    "boundary_candidate_count": 3
+  },
+  {
+    "repository": "DeepMyst/Mysti",
+    "sha": "6d709229b5199f6769fb3cf763e5122dcc43c079",
+    "assessment_version": 2,
+    "files_scanned": 103,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "mixed_boundaries_require_route_selection",
+    "inference_boundaries": [
+      "native_protocol",
+      "openai_chat"
+    ],
+    "checkpoint_support": "UNVERIFIED",
+    "providers": [
+      "anthropic",
+      "groq",
+      "openai"
+    ],
+    "frameworks": [],
+    "skipped": [
+      {
+        "file": "resources/mermaid.min.js",
+        "reason": "over 512 KiB"
+      },
+      {
+        "file": "src/webview/webviewContent.ts",
+        "reason": "over 512 KiB"
+      }
+    ],
+    "boundary_candidate_count": 6
+  },
+  {
+    "repository": "Rajib1000/strategic-reasoning-engine",
+    "sha": "74f31d55b6eecbfec7b0e22afec478f67ff122d0",
+    "assessment_version": 2,
+    "files_scanned": 0,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "no_inference_boundary_detected",
+    "inference_boundaries": [],
+    "checkpoint_support": "NOT_DETECTED",
+    "providers": [],
+    "frameworks": [],
+    "skipped": [],
+    "boundary_candidate_count": 0
+  },
+  {
+    "repository": "elophanto/EloPhanto",
+    "sha": "f9992ab185e430cf70842e864ca76a6a10df3c43",
+    "assessment_version": 2,
+    "files_scanned": 887,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "openai_compatible_proxy_candidate",
+    "inference_boundaries": [
+      "openai_chat"
+    ],
+    "checkpoint_support": "UNVERIFIED",
+    "providers": [
+      "anthropic",
+      "openai"
+    ],
+    "frameworks": [
+      "langchain",
+      "langgraph",
+      "litellm"
+    ],
+    "skipped": [
+      {
+        "file": "plugins/_template/plugin.py",
+        "reason": "Python parse failed"
+      },
+      {
+        "file": "plugins/_template/test_plugin.py",
+        "reason": "Python parse failed"
+      }
+    ],
+    "boundary_candidate_count": 6
+  },
+  {
+    "repository": "asilvainnovations/Strat-Planner-Pro",
+    "sha": "ccab13c984648b3c36926e19ce47b57a5f97e3e2",
+    "assessment_version": 2,
+    "files_scanned": 100,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "no_inference_boundary_detected",
+    "inference_boundaries": [],
+    "checkpoint_support": "NOT_DETECTED",
+    "providers": [
+      "anthropic"
+    ],
+    "frameworks": [],
+    "skipped": [],
+    "boundary_candidate_count": 0
+  },
+  {
+    "repository": "LilMGenius/polysona",
+    "sha": "ad1f263801eb1e777a5ee89e0a034688bc6bfbd9",
+    "assessment_version": 2,
+    "files_scanned": 30,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "no_inference_boundary_detected",
+    "inference_boundaries": [],
+    "checkpoint_support": "NOT_DETECTED",
+    "providers": [
+      "openai"
+    ],
+    "frameworks": [],
+    "skipped": [],
+    "boundary_candidate_count": 0
+  },
+  {
+    "repository": "NousResearch/hermes-agent",
+    "sha": "03544a73be9423b903bbfa11c29b252a0b88dce9",
+    "assessment_version": 2,
+    "files_scanned": 3471,
+    "scan_complete_within_scope": false,
+    "recommended_interception": "mixed_boundaries_require_route_selection",
+    "inference_boundaries": [
+      "native_protocol",
+      "openai_chat"
+    ],
+    "checkpoint_support": "UNVERIFIED",
+    "providers": [
+      "anthropic",
+      "google_genai",
+      "groq",
+      "openai"
+    ],
+    "frameworks": [
+      "litellm"
+    ],
+    "skipped": [
+      {
+        "file": "apps/desktop/electron/main.ts",
+        "reason": "over 512 KiB"
+      },
+      {
+        "file": "apps/shared/src/gateway-contract.openrpc.json",
+        "reason": "over 512 KiB"
+      }
+    ],
+    "boundary_candidate_count": 42
+  },
+  {
+    "repository": "itsPremkumar/Hermes-Full-Autonomous-Company",
+    "sha": "a08c09da9db0d1146202598a147e86a556eb1a4c",
+    "assessment_version": 2,
+    "files_scanned": 463,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "openai_compatible_proxy_candidate",
+    "inference_boundaries": [
+      "openai_chat"
+    ],
+    "checkpoint_support": "UNVERIFIED",
+    "providers": [
+      "anthropic",
+      "openai"
+    ],
+    "frameworks": [
+      "crewai"
+    ],
+    "skipped": [],
+    "boundary_candidate_count": 2
+  },
+  {
+    "repository": "open-jarvis/OpenJarvis",
+    "sha": "e86c582bbe9672db7a8ba574326140cb4ce29655",
+    "assessment_version": 2,
+    "files_scanned": 1805,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "mixed_boundaries_require_route_selection",
+    "inference_boundaries": [
+      "native_protocol",
+      "openai_chat"
+    ],
+    "checkpoint_support": "UNVERIFIED",
+    "providers": [
+      "anthropic",
+      "google_genai",
+      "groq",
+      "openai"
+    ],
+    "frameworks": [
+      "langchain",
+      "litellm"
+    ],
+    "skipped": [],
+    "boundary_candidate_count": 146
+  },
+  {
+    "repository": "1mancompany/OneManCompany",
+    "sha": "3fde1888941248351e5cfc0b153d9149fda73d81",
+    "assessment_version": 2,
+    "files_scanned": 468,
+    "scan_complete_within_scope": true,
+    "recommended_interception": "mixed_boundaries_require_route_selection",
+    "inference_boundaries": [
+      "native_protocol",
+      "openai_chat"
+    ],
+    "checkpoint_support": "NOT_DETECTED",
+    "providers": [
+      "anthropic",
+      "groq",
+      "openai"
+    ],
+    "frameworks": [
+      "langchain",
+      "langgraph"
+    ],
+    "skipped": [
+      {
+        "file": "docs/docs/assets/javascripts/lunr/wordcut.js",
+        "reason": "over 512 KiB"
+      }
+    ],
+    "boundary_candidate_count": 2
+  }
+]
