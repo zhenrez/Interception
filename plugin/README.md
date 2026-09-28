@@ -96,17 +96,14 @@ packet. Work verifies the hash before inference. Existing RETURNs are immutable 
 
 ## Completion boundary
 
-Code-level relay behavior is tested on Linux/Windows CI. Full operational acceptance still requires
-one observed live round trip:
+The transport pieces now have live evidence:
 
-```text
-target call
-→ local CATCH
-→ request-branch PR commit
-→ Work trigger
-→ return-branch RETURN
-→ local relay import
-→ original caller resumes
-```
+- a real blocking Prompt Evolver caller created a durable local CATCH;
+- that exact request was published to the request branch and received a matching RETURN on the
+  separate return branch;
+- local validation/import released the same waiting caller with the expected answer;
+- a separate cloud probe previously established request-branch CATCH → ChatGPT Work → return-branch RETURN.
 
-Do not claim that end-to-end path until each step is actually observed.
+These observations prove the bridge/relay/continuation contract and the cloud Work leg, but not that
+every real-caller request will automatically wake Work. Event-triggered Work admission and scheduling
+remain an external operational dependency.
