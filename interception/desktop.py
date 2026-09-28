@@ -195,13 +195,9 @@ def launch(project=None):
     ttk.Label(relay_box, text="Private mailbox repository").grid(
         row=0, column=0, sticky="w", padx=(0, 8), pady=2
     )
-    ttk.Entry(relay_box, textvariable=relay_repository).grid(
-        row=0, column=1, sticky="ew", pady=2
-    )
+    ttk.Entry(relay_box, textvariable=relay_repository).grid(row=0, column=1, sticky="ew", pady=2)
     ttk.Label(relay_box, text="PR").grid(row=0, column=2, sticky="w", padx=(8, 4), pady=2)
-    ttk.Entry(relay_box, width=7, textvariable=relay_pr).grid(
-        row=0, column=3, sticky="w", pady=2
-    )
+    ttk.Entry(relay_box, width=7, textvariable=relay_pr).grid(row=0, column=3, sticky="w", pady=2)
     ttk.Label(relay_box, text="Return branch").grid(
         row=1, column=0, sticky="w", padx=(0, 8), pady=2
     )
