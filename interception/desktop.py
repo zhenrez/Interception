@@ -5,16 +5,46 @@ import queue
 import subprocess
 import sys
 import threading
+from pathlib import Path
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
 from .bridge import Bridge
 from .cli import import_return, install, load_config
 from .contracts import validate_return
-from .files import loads
+from .files import loads, write_json
 from .github_relay import GitHubRelay, configure as configure_relay
 from .proof import run as run_proof
 from .server import BridgeServer
+
+
+DEFAULT_RELAY_REPOSITORY = "zhenrez/chat-docs-versions-histories"
+DEFAULT_RELAY_PR = 2
+DEFAULT_RETURN_BRANCH = "interception-returns"
+
+
+def settings_path():
+    root = os.environ.get("LOCALAPPDATA")
+    base = Path(root) if root else Path.home() / ".interception"
+    return base / "Interception" / "desktop.json" if root else base / "desktop.json"
+
+
+def load_last_target():
+    path = settings_path()
+    if not path.exists():
+        return None
+    try:
+        data = loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    target = data.get("last_target") if isinstance(data, dict) else None
+    return target if isinstance(target, str) and target else None
+
+
+def save_last_target(path):
+    destination = settings_path()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    write_json(destination, {"version": 1, "last_target": str(path)})
 
 
 def open_folder(path):
@@ -47,9 +77,9 @@ def launch(project=None):
     counts = tk.StringVar(value="Waiting inference: 0    Answered inference: 0")
     bridge_state = tk.StringVar(value="Local API bridge: STOPPED")
     relay_state = tk.StringVar(value="GitHub transport: not linked to this target")
-    relay_repository = tk.StringVar(value="zhenrez/chat-docs-versions-histories")
-    relay_pr = tk.StringVar(value="2")
-    relay_return_branch = tk.StringVar(value="interception-returns")
+    relay_repository = tk.StringVar(value=DEFAULT_RELAY_REPOSITORY)
+    relay_pr = tk.StringVar(value=str(DEFAULT_RELAY_PR))
+    relay_return_branch = tk.StringVar(value=DEFAULT_RETURN_BRANCH)
 
     frame = ttk.Frame(window, padding=16)
     frame.pack(fill="both", expand=True)
@@ -140,11 +170,11 @@ def launch(project=None):
         state["bridge"] = Bridge(selected)
         state["assessment"] = result
         target.set(str(state["bridge"].root))
+        save_last_target(state["bridge"].root)
         render_assessment(result)
         refresh_relay_label()
-        status.set(
-            "Target assessed. Start the API bridge or review the detected inference surface."
-        )
+        status.set("Target assessed. Starting Interception automatically...")
+        start()
 
     ttk.Button(frame, text="Choose target project", command=guarded(select)).pack(fill="x")
 
@@ -270,21 +300,25 @@ def launch(project=None):
 
     def start():
         current = bridge()
+        relay_config = current.home / "github-relay.json"
+        if not relay_config.exists():
+            configure_relay(
+                current.root,
+                DEFAULT_RELAY_REPOSITORY,
+                DEFAULT_RELAY_PR,
+                return_branch=DEFAULT_RETURN_BRANCH,
+            )
+            refresh_relay_label()
         if not state["server"]:
             config = load_config(current)
             server = BridgeServer(current, port=config["port"], token=config["token"])
             state["server"] = server
             threading.Thread(target=server.serve_forever, daemon=True).start()
             bridge_state.set(f"Local API bridge: RUNNING at 127.0.0.1:{config['port']}")
-        if (current.home / "github-relay.json").exists():
-            start_transport()
-            status.set(
-                "Interception runtime is active: local API + GitHub → ChatGPT Work transport."
-            )
-        else:
-            status.set(
-                "Local API is active. Configure the GitHub transport below for automatic Work routing."
-            )
+        start_transport()
+        status.set(
+            "READY — local API and GitHub → ChatGPT Work transport are running automatically."
+        )
 
     def copy_text(text):
         window.clipboard_clear()
@@ -336,7 +370,10 @@ def launch(project=None):
 
     ttk.Label(
         inference,
-        text="Runtime controls. External agents should call the local OpenAI-compatible endpoint.",
+        text=(
+            "Interception starts automatically when a target is selected. "
+            "These controls are recovery/diagnostic controls only."
+        ),
         wraplength=850,
     ).pack(anchor="w", pady=(0, 8))
     ttk.Button(
@@ -463,7 +500,8 @@ def launch(project=None):
         window.destroy()
 
     window.protocol("WM_DELETE_WINDOW", close)
-    if project:
-        guarded(lambda: select(project))()
+    startup_target = project or load_last_target()
+    if startup_target and Path(startup_target).is_dir():
+        guarded(lambda: select(startup_target))()
     refresh()
     window.mainloop()
