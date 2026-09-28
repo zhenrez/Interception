@@ -12,6 +12,7 @@ from .bridge import Bridge
 from .cli import import_return, install, load_config
 from .contracts import validate_return
 from .files import loads
+from .github_relay import GitHubRelay, configure as configure_relay
 from .proof import run as run_proof
 from .server import BridgeServer
 
@@ -29,7 +30,14 @@ def launch(project=None):
     window.geometry("940x780")
     window.minsize(760, 660)
 
-    state = {"bridge": None, "server": None, "worker": None, "assessment": None}
+    state = {
+        "bridge": None,
+        "server": None,
+        "worker": None,
+        "assessment": None,
+        "relay_worker": None,
+        "relay_stop": None,
+    }
     stop, events = threading.Event(), queue.Queue()
 
     target = tk.StringVar(
@@ -39,6 +47,9 @@ def launch(project=None):
     counts = tk.StringVar(value="Waiting inference: 0    Answered inference: 0")
     bridge_state = tk.StringVar(value="Local API bridge: STOPPED")
     relay_state = tk.StringVar(value="GitHub transport: not linked to this target")
+    relay_repository = tk.StringVar(value="zhenrez/chat-docs-versions-histories")
+    relay_pr = tk.StringVar(value="2")
+    relay_return_branch = tk.StringVar(value="interception-returns")
 
     frame = ttk.Frame(window, padding=16)
     frame.pack(fill="both", expand=True)
@@ -110,6 +121,9 @@ def launch(project=None):
         cfg = loads(path.read_text(encoding="utf-8"))
         request_branch = cfg.get("request_branch", cfg.get("branch", "?"))
         return_branch = cfg.get("return_branch", request_branch)
+        relay_repository.set(cfg.get("repository", relay_repository.get()))
+        relay_pr.set(str(cfg.get("pull_request_number", relay_pr.get())))
+        relay_return_branch.set(return_branch)
         relay_state.set(
             f"GitHub transport: {cfg.get('repository', '?')}  "
             f"PR #{cfg.get('pull_request_number', '?')}  "
@@ -117,8 +131,8 @@ def launch(project=None):
         )
 
     def select(path=None):
-        if state["server"] or state["worker"]:
-            raise ValueError("Stop the active bridge/test before switching targets.")
+        if state["server"] or state["worker"] or state["relay_worker"]:
+            raise ValueError("Stop the active bridge/relay/test before switching targets.")
         selected = path or filedialog.askdirectory(title="Choose target AI/agent project")
         if not selected:
             return
@@ -175,19 +189,102 @@ def launch(project=None):
         command=guarded(lambda: open_folder(bridge().home)),
     ).pack(fill="x", pady=3)
 
-    assessment = tk.Text(routing, height=18, wrap="word")
+    relay_box = ttk.LabelFrame(routing, text="GitHub → ChatGPT Work transport", padding=10)
+    relay_box.pack(fill="x", pady=(10, 0))
+
+    ttk.Label(relay_box, text="Private mailbox repository").grid(
+        row=0, column=0, sticky="w", padx=(0, 8), pady=2
+    )
+    ttk.Entry(relay_box, textvariable=relay_repository).grid(row=0, column=1, sticky="ew", pady=2)
+    ttk.Label(relay_box, text="PR").grid(row=0, column=2, sticky="w", padx=(8, 4), pady=2)
+    ttk.Entry(relay_box, width=7, textvariable=relay_pr).grid(row=0, column=3, sticky="w", pady=2)
+    ttk.Label(relay_box, text="Return branch").grid(
+        row=1, column=0, sticky="w", padx=(0, 8), pady=2
+    )
+    ttk.Entry(relay_box, textvariable=relay_return_branch).grid(
+        row=1, column=1, columnspan=3, sticky="ew", pady=2
+    )
+    relay_box.columnconfigure(1, weight=1)
+
+    assessment = tk.Text(routing, height=14, wrap="word")
     assessment.pack(fill="both", expand=True, pady=(10, 0))
+
+    def configure_transport():
+        current = bridge()
+        repository = relay_repository.get().strip()
+        return_branch = relay_return_branch.get().strip()
+        try:
+            pr_number = int(relay_pr.get().strip())
+        except ValueError as exc:
+            raise ValueError("Mailbox PR must be a positive integer.") from exc
+        if pr_number < 1:
+            raise ValueError("Mailbox PR must be a positive integer.")
+        configure_relay(
+            current.root,
+            repository,
+            pr_number,
+            return_branch=return_branch,
+        )
+        refresh_relay_label()
+        status.set("GitHub transport configured and verified for this target.")
+
+    def stop_transport():
+        relay_stop = state.get("relay_stop")
+        if relay_stop:
+            relay_stop.set()
+        state["relay_worker"] = None
+        state["relay_stop"] = None
+        refresh_relay_label()
+        status.set("GitHub transport watcher stopped.")
+
+    def start_transport():
+        current = bridge()
+        if state["relay_worker"] and state["relay_worker"].is_alive():
+            return
+        relay = GitHubRelay(current.root)
+        relay_stop = threading.Event()
+        state["relay_stop"] = relay_stop
+
+        def work():
+            while not relay_stop.is_set():
+                try:
+                    result = relay.sync()
+                except Exception as exc:
+                    events.put(("relay_error", str(exc)))
+                    return
+                events.put(
+                    (
+                        "relay_status",
+                        "GitHub transport active: "
+                        f"published={result['published_files']} "
+                        f"imported={len(result['imported'])} "
+                        f"errors={len(result['errors'])}",
+                    )
+                )
+                relay_stop.wait(10)
+
+        state["relay_worker"] = threading.Thread(target=work, daemon=True)
+        state["relay_worker"].start()
+        relay_state.set("GitHub transport: ACTIVE — polling request/return branches every 10s")
+        status.set("GitHub transport watcher started.")
 
     def start():
         current = bridge()
-        if state["server"]:
-            return
-        config = load_config(current)
-        server = BridgeServer(current, port=config["port"], token=config["token"])
-        state["server"] = server
-        threading.Thread(target=server.serve_forever, daemon=True).start()
-        bridge_state.set(f"Local API bridge: RUNNING at 127.0.0.1:{config['port']}")
-        status.set("Interception is listening for inference calls from this target.")
+        if not state["server"]:
+            config = load_config(current)
+            server = BridgeServer(current, port=config["port"], token=config["token"])
+            state["server"] = server
+            threading.Thread(target=server.serve_forever, daemon=True).start()
+            bridge_state.set(f"Local API bridge: RUNNING at 127.0.0.1:{config['port']}")
+        if (current.home / "github-relay.json").exists():
+            start_transport()
+            status.set(
+                "Interception runtime is active: local API + GitHub → ChatGPT Work transport."
+            )
+        else:
+            status.set(
+                "Local API is active. Configure the GitHub transport below for automatic Work routing."
+            )
 
     def copy_text(text):
         window.clipboard_clear()
@@ -242,9 +339,26 @@ def launch(project=None):
         text="Runtime controls. External agents should call the local OpenAI-compatible endpoint.",
         wraplength=850,
     ).pack(anchor="w", pady=(0, 8))
-    ttk.Button(inference, text="Start local API bridge", command=guarded(start)).pack(
-        fill="x", pady=3
-    )
+    ttk.Button(
+        inference,
+        text="Start runtime (local API + configured GitHub transport)",
+        command=guarded(start),
+    ).pack(fill="x", pady=3)
+    ttk.Button(
+        inference,
+        text="Configure / verify GitHub transport",
+        command=guarded(configure_transport),
+    ).pack(fill="x", pady=3)
+    ttk.Button(
+        inference,
+        text="Start GitHub transport watcher",
+        command=guarded(start_transport),
+    ).pack(fill="x", pady=3)
+    ttk.Button(
+        inference,
+        text="Stop GitHub transport watcher",
+        command=guarded(stop_transport),
+    ).pack(fill="x", pady=3)
     ttk.Button(inference, text="Copy pending inference requests", command=guarded(copy_batch)).pack(
         fill="x", pady=3
     )
@@ -307,10 +421,19 @@ def launch(project=None):
         try:
             while True:
                 kind, message = events.get_nowait()
-                state["worker"] = None
-                status.set(message)
-                if kind == "error":
-                    messagebox.showerror("Interception", message)
+                if kind in {"done", "error"}:
+                    state["worker"] = None
+                    status.set(message)
+                    if kind == "error":
+                        messagebox.showerror("Interception", message)
+                elif kind == "relay_status":
+                    status.set(message)
+                elif kind == "relay_error":
+                    state["relay_worker"] = None
+                    state["relay_stop"] = None
+                    refresh_relay_label()
+                    status.set(f"GitHub transport stopped: {message}")
+                    messagebox.showerror("Interception GitHub transport", message)
         except queue.Empty:
             pass
         try:
@@ -332,6 +455,8 @@ def launch(project=None):
         ):
             return
         stop.set()
+        if state.get("relay_stop"):
+            state["relay_stop"].set()
         if state["server"]:
             state["server"].shutdown()
             state["server"].server_close()
