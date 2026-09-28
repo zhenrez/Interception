@@ -234,7 +234,9 @@ Apache-2.0 licensed.
 
 ## GitHub / ChatGPT notification extension
 
-This branch adds an optional event-triggered relay through the existing GitHub plugin.
-A private mailbox PR update can wake a Work task; its returned JSON resumes the local caller.
-See [plugin setup and verified boundaries](plugin/README.md). The implementation is prepared,
-but a live private mailbox and Work automation have not been activated.
+Interception includes the GitHub-only request/return relay described in [plugin setup and verified boundaries](plugin/README.md).
+The private mailbox branches are live. A real blocking Prompt Evolver caller has been observed
+creating a durable CATCH, receiving a validated GitHub RETURN, and resuming with the expected
+answer. A separate cloud probe has established CATCH → GitHub → Work → RETURN. Automatic
+event-trigger wake for every real-caller run remains an outer Work/scheduling concern and is not
+claimed by the local bridge itself.
