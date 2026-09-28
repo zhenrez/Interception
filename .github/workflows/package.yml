@@ -3,6 +3,7 @@ name: Package Interception MVP
 on:
   push:
     branches:
+      - main
       - feat/chatgpt-plugin-mailbox
       - feat/operational-inference
       - sandbox/ui-scope-correction
