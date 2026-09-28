@@ -1,5 +1,7 @@
 # Interception
 
+> **ARCHIVED — 2026-09-28.** Development and automated operation are stopped. This repository is preserved as historical source/evidence only. Do not treat it as an active dependency or production transport.
+
 **Let an agent wait for a ChatGPT answer without losing its inference request.**
 
 Interception captures supported inference requests, turns them into self-contained prompts,
