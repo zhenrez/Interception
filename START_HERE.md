@@ -19,8 +19,13 @@ as Panoptes.
    Interception to service.
 4. In **Target & routing**, review the detected framework/protocol and copy the generated local API
    connection settings when needed.
-5. In **Inference**, start the local API bridge.
-6. Point the target's supported inference client at the generated OpenAI-compatible local endpoint,
+5. In **Inference**, click **Configure / verify GitHub transport**. The current temporary mailbox
+   values are prefilled; this verifies the private repository, permanent request PR, and separate
+   RETURN branch using the local GitHub CLI login.
+6. Click **Start runtime (local API + configured GitHub transport)**. This starts the local
+   OpenAI-compatible endpoint and the GitHub request/return watcher together. The watcher publishes
+   new durable CATCH packets and imports validated RETURNs every 10 seconds.
+7. Point the target's supported inference client at the generated OpenAI-compatible local endpoint,
    or use an explicit target adapter.
 
 ## GitHub → ChatGPT Work transport
@@ -55,6 +60,10 @@ Current temporary private transport:
 
 The transport repository is temporary infrastructure. A dedicated private Interception mailbox repo
 is the cleaner long-term destination.
+
+The desktop launcher now owns the normal local runtime path: once a target is selected and its
+GitHub transport is configured, **Start runtime** runs both the local API bridge and the relay watcher.
+The lower-level `relay-configure` / `relay-watch` commands remain available for headless use.
 
 ## Diagnostics
 
