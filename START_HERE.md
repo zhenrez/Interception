@@ -15,18 +15,16 @@ as Panoptes.
 2. Double-click **Start-Interception.cmd**.
    The launcher selects clean 64-bit CPython 3.13 or 3.11 and prepares the repository-local
    `.venv` without changing global Python/Conda/CUDA/NVIDIA state.
-3. Click **Choose target project** and select the AI/agent project whose inference calls you want
-   Interception to service.
-4. In **Target & routing**, review the detected framework/protocol and copy the generated local API
-   connection settings when needed.
-5. In **Inference**, click **Configure / verify GitHub transport**. The current temporary mailbox
-   values are prefilled; this verifies the private repository, permanent request PR, and separate
-   RETURN branch using the local GitHub CLI login.
-6. Click **Start runtime (local API + configured GitHub transport)**. This starts the local
-   OpenAI-compatible endpoint and the GitHub request/return watcher together. The watcher publishes
-   new durable CATCH packets and imports validated RETURNs every 10 seconds.
-7. Point the target's supported inference client at the generated OpenAI-compatible local endpoint,
-   or use an explicit target adapter.
+3. On the first launch only, choose the AI/agent project whose inference calls Interception should
+   service. Interception remembers that local target in the user's Windows profile.
+4. Selection is the start command. Interception automatically installs/assesses the target, verifies
+   the configured private GitHub mailbox transport, starts the local OpenAI-compatible endpoint, and
+   starts the GitHub request/return watcher. There is no separate configure/start sequence.
+5. On later launches, if the remembered target still exists, Interception reopens it and starts the
+   runtime automatically.
+6. Point the target's supported inference client at the generated local endpoint once, or use an
+   explicit target adapter. After that, inference requests are intended to flow without manual
+   copy/paste or per-request UI work.
 
 ## GitHub → ChatGPT Work transport
 
@@ -61,9 +59,11 @@ Current temporary private transport:
 The transport repository is temporary infrastructure. A dedicated private Interception mailbox repo
 is the cleaner long-term destination.
 
-The desktop launcher now owns the normal local runtime path: once a target is selected and its
-GitHub transport is configured, **Start runtime** runs both the local API bridge and the relay watcher.
-The lower-level `relay-configure` / `relay-watch` commands remain available for headless use.
+The desktop launcher owns the normal local runtime path. Selecting a target automatically verifies
+the configured GitHub transport and starts both the local API bridge and relay watcher. The target is
+remembered for subsequent launches, so normal use is launch-and-run rather than an operator checklist.
+The lower-level `relay-configure` / `relay-watch` commands remain available only for headless
+recovery and maintenance.
 
 ## Diagnostics
 
